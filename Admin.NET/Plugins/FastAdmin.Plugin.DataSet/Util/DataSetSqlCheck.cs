@@ -59,22 +59,30 @@ public class DataSetSqlCheck
     }
     public static async Task<List<DataSetColumnInfo>> 获取查询结果的列名以及数据类型(string sql, ISqlSugarClient db)
     {
-        using var reader = await db.Ado.GetDataReaderAsync(sql);
-        var schemaTable = reader.GetSchemaTable();
-        var infos = new List<DataSetColumnInfo>();
-        for (int i = 0; i < schemaTable?.Rows.Count; i++)
+        try
         {
-            string columnName = reader.GetName(i);
-            Type dataType = reader.GetFieldType(reader.GetOrdinal(columnName));
-            Console.WriteLine("Column Name: " + columnName);
-            Console.WriteLine("Data Type: " + dataType.FullName);
-            infos.Add(new DataSetColumnInfo
+            using var reader = await db.Ado.GetDataReaderAsync(sql);
+            var schemaTable = reader.GetSchemaTable();
+            var infos = new List<DataSetColumnInfo>();
+            for (int i = 0; i < schemaTable?.Rows.Count; i++)
             {
-                ColumnName = columnName,
-                ColumnFieldType = dataType.FullName
-            });
+                string columnName = reader.GetName(i);
+                Type dataType = reader.GetFieldType(reader.GetOrdinal(columnName));
+                Console.WriteLine("Column Name: " + columnName);
+                Console.WriteLine("Data Type: " + dataType.FullName);
+                infos.Add(new DataSetColumnInfo
+                {
+                    ColumnName = columnName,
+                    ColumnFieldType = dataType.FullName
+                });
+            }
+            return infos;
         }
-        return infos;
+        catch (Exception ex)
+        {
+            Oops.Oh($"sql执行错误:{ex.Message}");
+        }
+        return null;
     }
     public static dynamic 获取sql执行结果(string sql, ISqlSugarClient db, int pageIndex = 1, int pageSize = 20)
     {
