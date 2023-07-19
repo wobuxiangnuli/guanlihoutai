@@ -34,6 +34,7 @@ export * from './apis/sys-online-user-api';
 export * from './apis/sys-org-api';
 export * from './apis/sys-plugin-api';
 export * from './apis/sys-pos-api';
+export * from './apis/data-set-api';
 export * from './apis/sys-print-api';
 export * from './apis/sys-region-api';
 export * from './apis/sys-role-api';
