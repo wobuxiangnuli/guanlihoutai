@@ -19,7 +19,7 @@ public class DataSetSqlCheck
     /// <param name="oldDataSetColumnInfos"></param>
     /// <param name="db"></param>
     /// <returns></returns>
-    public static async Task 检查sql(string newSql, List<DataSetColumnInfo> oldDataSetColumnInfos, ISqlSugarClient db)
+    public static void 检查sql(string newSql, List<DataSetColumnInfo> oldDataSetColumnInfos, ISqlSugarClient db)
     {
         //不考虑租户id，目前就只使用库隔离
         检查sql是否存在非法操作(newSql);
@@ -57,25 +57,35 @@ public class DataSetSqlCheck
             RemoveColumnInfos = removeColumn
         };
     }
+
     public static async Task<List<DataSetColumnInfo>> 获取查询结果的列名以及数据类型(string sql, ISqlSugarClient db)
     {
-        using var reader = await db.Ado.GetDataReaderAsync(sql);
-        var schemaTable = reader.GetSchemaTable();
-        var infos = new List<DataSetColumnInfo>();
-        for (int i = 0; i < schemaTable?.Rows.Count; i++)
+        try
         {
-            string columnName = reader.GetName(i);
-            Type dataType = reader.GetFieldType(reader.GetOrdinal(columnName));
-            Console.WriteLine("Column Name: " + columnName);
-            Console.WriteLine("Data Type: " + dataType.FullName);
-            infos.Add(new DataSetColumnInfo
+            using var reader = await db.Ado.GetDataReaderAsync(sql);
+            var schemaTable = reader.GetSchemaTable();
+            var infos = new List<DataSetColumnInfo>();
+            for (int i = 0; i < schemaTable?.Rows.Count; i++)
             {
-                ColumnName = columnName,
-                ColumnFieldType = dataType.FullName
-            });
+                string columnName = reader.GetName(i);
+                Type dataType = reader.GetFieldType(reader.GetOrdinal(columnName));
+                Console.WriteLine("Column Name: " + columnName);
+                Console.WriteLine("Data Type: " + dataType.FullName);
+                infos.Add(new DataSetColumnInfo
+                {
+                    ColumnName = columnName,
+                    ColumnFieldType = dataType.FullName
+                });
+            }
+
+            return infos;
         }
-        return infos;
+        catch (Exception e)
+        {
+            throw Oops.Oh("sql语句执行错误:"+e.Message);
+        }
     }
+
     public static dynamic 获取sql执行结果(string sql, ISqlSugarClient db, int pageIndex = 1, int pageSize = 20)
     {
         try
@@ -86,9 +96,8 @@ public class DataSetSqlCheck
         }
         catch (Exception e)
         {
-            Oops.Oh("sql 执行错误:" + e.Message);
+            throw Oops.Oh("sql 执行错误:" + e.Message);
         }
-        return null;
     }
     private static void 检查sql是否存在非法操作(string sql)
     {
@@ -97,7 +106,7 @@ public class DataSetSqlCheck
         {
             if (sql.Contains(s))
             {
-                Oops.Oh($"不能在sql中执行 {s}语句");
+                throw Oops.Oh($"不能在sql中执行 {s}语句");
             }
         }
     }
