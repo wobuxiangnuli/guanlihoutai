@@ -27,11 +27,12 @@
 						</el-form-item>
 					</el-col>
 					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
-						<el-form-item label="菜单类型" prop="type" :rules="[{ required: true, message: '菜单类型不能为空', trigger: 'blur' }]">
+						<el-form-item @change="selectMuenType" label="菜单类型" prop="type" :rules="[{ required: true, message: '菜单类型不能为空', trigger: 'blur' }]">
 							<el-radio-group v-model="state.ruleForm.type">
 								<el-radio :label="1">目录</el-radio>
 								<el-radio :label="2">菜单</el-radio>
 								<el-radio :label="3">按钮</el-radio>
+								<el-radio :label="4">自定义页面</el-radio>
 							</el-radio-group>
 						</el-form-item>
 					</el-col>
@@ -40,7 +41,7 @@
 							<el-input v-model="state.ruleForm.title" placeholder="菜单名称" clearable />
 						</el-form-item>
 					</el-col>
-					<template v-if="state.ruleForm.type === 1 || state.ruleForm.type === 2">
+					<template v-if="state.ruleForm.type === 1 || state.ruleForm.type === 2 || state.ruleForm.type === 4">
 						<el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12" class="mb20">
 							<el-form-item label="路由名称">
 								<el-input v-model="state.ruleForm.name" placeholder="路由名称" clearable />
@@ -48,12 +49,12 @@
 						</el-col>
 						<el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12" class="mb20">
 							<el-form-item label="路由路径">
-								<el-input v-model="state.ruleForm.path" placeholder="路由路径" clearable />
+								<el-input v-model="state.ruleForm.path" placeholder="路由路径" clearable :disabled="isDisabled" />
 							</el-form-item>
 						</el-col>
 						<el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12" class="mb20">
 							<el-form-item label="组件路径">
-								<el-input v-model="state.ruleForm.component" placeholder="组件路径" clearable />
+								<el-input v-model="state.ruleForm.component" placeholder="组件路径" clearable :disabled="isDisabled"/>
 							</el-form-item>
 						</el-col>
 						<el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12" class="mb20">
@@ -149,11 +150,11 @@
 <script lang="ts" setup name="sysEditMenu">
 import { reactive, ref } from 'vue';
 import IconSelector from '/@/components/iconSelector/index.vue';
-
 import { getAPI } from '/@/utils/axios-utils';
 import { SysMenuApi } from '/@/api-services/api';
 import { SysMenu, UpdateMenuInput } from '/@/api-services/models';
-
+import { useRouter } from "vue-router";
+const router = useRouter();
 const props = defineProps({
 	title: String,
 	menuData: Array<SysMenu>,
@@ -163,6 +164,7 @@ const ruleFormRef = ref();
 const state = reactive({
 	isShowDialog: false,
 	ruleForm: {} as UpdateMenuInput,
+
 });
 
 // 打开弹窗
@@ -181,10 +183,12 @@ const closeDialog = () => {
 const cancel = () => {
 	state.isShowDialog = false;
 };
-
 // 提交
 const submit = () => {
-	ruleFormRef.value.validate(async (valid: boolean) => {
+	if (state.ruleForm.type == 4) {
+		router.push("/DesignPageIndex");
+	} else {
+		ruleFormRef.value.validate(async (valid: boolean) => {
 		if (!valid) return;
 		if (state.ruleForm.id != undefined && state.ruleForm.id > 0) {
 			await getAPI(SysMenuApi).apiSysMenuUpdatePost(state.ruleForm);
@@ -193,8 +197,21 @@ const submit = () => {
 		}
 		closeDialog();
 	});
-};
+	}
 
+};
+let isDisabled = ref(false)
+// 自定义页面
+const selectMuenType = () => {
+	if (state.ruleForm.type == 4) {
+		state.ruleForm.path = 'lowCode/DesignPage'
+		state.ruleForm.component = 'lowCode/DesignPage/index'
+		isDisabled.value = true
+	}
+	state.ruleForm.path
+	console.log(state.ruleForm.type,'state.ruleForm.type');
+	
+}
 // 导出对象
 defineExpose({ openDialog });
 </script>
