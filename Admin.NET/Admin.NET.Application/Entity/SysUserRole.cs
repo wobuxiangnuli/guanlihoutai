@@ -1,4 +1,8 @@
-﻿namespace Admin.NET.Application.Entity;
+﻿using System.ComponentModel.DataAnnotations;
+using Admin.NET.Core;
+using SqlSugar;
+
+namespace Admin.NET.Application.Entity;
 
 /// <summary>
 /// 
