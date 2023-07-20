@@ -178,6 +178,13 @@ const state = reactive({
 // 打开弹窗
 const openDialog = (row: any) => {
 	state.ruleForm = JSON.parse(JSON.stringify(row));
+	if (state.ruleForm.component == 'lowCode/DesignPage/index' && state.ruleForm.path == 'lowCode/DesignPage') {
+		isDisabled.value = true
+		kaiGuan.value = true
+	} else {
+		isDisabled.value = false
+		kaiGuan.value = false
+	}
 	state.isShowDialog = true;
 };
 
