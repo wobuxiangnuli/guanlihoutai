@@ -33,12 +33,12 @@ public class DataSetOperationService : IDynamicApiController
         {
             throw Oops.Oh($"{input.Name} 已存在");
         }
-        await DataSetSqlCheck.检查sql(input.Sql, null, db);
+        DataSetSqlCheck.检查sql(input.Sql, null, db);
         var model = input.Adapt<Entity.DataSet>();
         model.Version = 1;
         model.DataSetColumnInfos = await DataSetSqlCheck.获取查询结果的列名以及数据类型(input.Sql, db);
         await _datesetRepository.AsInsertable(model).ExecuteCommandAsync();
-        return await DataSetSqlCheck.获取sql执行结果(input.Sql, db);//返回查询结果
+        return DataSetSqlCheck.获取sql执行结果(input.Sql, db);//返回查询结果
     }
     [ApiDescriptionSettings(Name = "Update")]
     [DisplayName("更新data set")]
@@ -53,13 +53,13 @@ public class DataSetOperationService : IDynamicApiController
         var model = await _datesetRepository.GetFirstAsync(c => c.Id == input.Id);
         if (model.Sql.Trim() == input.Sql.Trim())
         {
-            var dataResult = await DataSetSqlCheck.获取sql执行结果(input.Sql, db);
+            var dataResult = DataSetSqlCheck.获取sql执行结果(input.Sql, db);
             await _datesetRepository.AsUpdateable(input.Adapt<Entity.DataSet>()).ExecuteCommandAsync();
-            return new{ data = dataResult, changeInfos=new List<dynamic>() };
+            return new { data = dataResult, changeInfos = new List<dynamic>() };
         }
         // 如果sql更新了那么 就把原来的复制一个标记为删除，并更新当前
         // todo 没有防止并发的代码
-        await DataSetSqlCheck.检查sql(input.Sql, model.DataSetColumnInfos, db);
+        DataSetSqlCheck.检查sql(input.Sql, model.DataSetColumnInfos, db);
         var old = model.Adapt<Entity.DataSet>();
         old.Id = 0;
         old.IsDelete = true;
@@ -67,9 +67,9 @@ public class DataSetOperationService : IDynamicApiController
         var newModel = input.Adapt<Entity.DataSet>();
         newModel.Version = old.Version + 1;
         newModel.DataSetColumnInfos = await DataSetSqlCheck.获取查询结果的列名以及数据类型(input.Sql, db);
-        await _datesetRepository.AsUpdateable().ExecuteCommandAsync();
+        await _datesetRepository.AsUpdateable(newModel).ExecuteCommandAsync();
 
-        var data = await DataSetSqlCheck.获取sql执行结果(input.Sql, db);
+        var data = DataSetSqlCheck.获取sql执行结果(input.Sql, db);
         // 更新了sql原有引用的 要检查是否少了列。如果少了列，应该提示，多了列不提示 另外列数据类型变了 也需要警告
         var changeInfos = await DataSetSqlCheck.对比修改或增加的列和变更的数据类型(input.Sql, model.DataSetColumnInfos, db);
         return new { data, changeInfos = changeInfos };
@@ -85,6 +85,7 @@ public class DataSetOperationService : IDynamicApiController
                 c.Id,
                 c.Description,
                 c.Sql,
+                c.DataSetColumnInfos,
                 c.CreateTime,
                 c.UpdateTime
             }, true)
@@ -95,6 +96,7 @@ public class DataSetOperationService : IDynamicApiController
     [DisplayName("删除")]
     public async Task Delete(long id)
     {
-        await _datesetRepository.DeleteByIdAsync(id);
+        var model = await _datesetRepository.GetByIdAsync(id);
+        await _datesetRepository.FakeDeleteAsync(model);
     }
 }
