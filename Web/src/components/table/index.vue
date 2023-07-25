@@ -330,6 +330,7 @@ const handleList = async () => {
 		state.showPagination = true;
 		state.data = res.result?.items ?? [];
 		state.total = res.result?.total ?? 0;
+		console.log(res);
 	} else {
 		state.showPagination = false;
 		state.data = res.result ?? [];
