@@ -178,7 +178,7 @@ const state = reactive({
 // 打开弹窗
 const openDialog = (row: any) => {
 	state.ruleForm = JSON.parse(JSON.stringify(row));
-	if (state.ruleForm.component == 'lowCode/DesignPage/index' && state.ruleForm.path == 'lowCode/DesignPage') {
+	if (state.ruleForm.component == '/lowCode/DesignPage/index' && state.ruleForm.path == '/lowCode/DesignPage') {
 		isDisabled.value = true
 		kaiGuan.value = true
 	} else {
@@ -215,8 +215,8 @@ let kaiGuan = ref(false)
 // 自定义页面
 const selectSwitch = (e :boolean) => {
 	if (e) {
-		state.ruleForm.path = 'lowCode/DesignPage'
-		state.ruleForm.component = 'lowCode/DesignPage/index'
+		state.ruleForm.path = '/lowCode/DesignPage'
+		state.ruleForm.component = '/lowCode/DesignPage/index'
 		isDisabled.value = true
 	} else {
 		state.ruleForm.path = ''

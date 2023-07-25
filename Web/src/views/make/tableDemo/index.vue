@@ -2,14 +2,7 @@
 	<div class="table-demo-container layout-padding">
 		<div class="table-demo-padding layout-padding-view layout-padding-auto">
 			<TableSearch :search="state.tableData.search" @search="onSearch" />
-			<Table
-				ref="tableRef"
-				v-bind="state.tableData"
-				class="table-demo"
-				@delRow="onTableDelRow"
-				@pageChange="onTablePageChange"
-				@sortHeader="onSortHeader"
-			/>
+			<Table :getData="getData" :columns="columns" ref="tableRef" v-bind="state.tableData" class="table-demo" @delRow="onTableDelRow" @pageChange="onTablePageChange" @sortHeader="onSortHeader" />
 		</div>
 	</div>
 </template>
@@ -75,7 +68,7 @@ const state = reactive<TableDemoState>({
 		printName: 'vueNextAdmin 表格打印演示',
 	},
 });
-
+const columns = [{ label: '名字', prop: 'name' }];
 // 初始化列表数据
 const getTableData = () => {
 	state.tableData.config.loading = true;
@@ -96,6 +89,21 @@ const getTableData = () => {
 	setTimeout(() => {
 		state.tableData.config.loading = false;
 	}, 500);
+};
+const getData = () => {
+	var aaa = [];
+	for (let i = 0; i < 20; i++) {
+		aaa.push({
+			id: `123456789${i + 1}`,
+			name: `莲塘别墅广场${i + 1}`,
+			address: `中沧公寓中庭榕树下${i + 1}`,
+			phone: `0592-6081259${i + 1}`,
+			time: `6:00 ~ 24:00`,
+			isSupport: `${i % 2 === 0 ? '是' : '否'}`,
+			image: `https://img2.baidu.com/it/u=417454395,2713356475&fm=253&fmt=auto?w=200&h=200`,
+		});
+	}
+	return { result: { items: aaa, total: 50 } };
 };
 // 搜索点击时表单回调
 const onSearch = (data: EmptyObjectType) => {

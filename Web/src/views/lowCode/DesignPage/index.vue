@@ -10,44 +10,18 @@
             :is-resizable="isresizable" :is-mirrored="false" :vertical-compact="true" :margin="[10, 10]"
             :use-css-transforms="true" :static="false">
             <grid-item v-for="item in state.layouts" :x="item.x" :y="item.y" :w="item.w" :h="item.h" :i="item.i"
-                :key="item.i">
-                <div class="w100 h100 flex" style="background-color: brown;">
-                    <!-- <span class="flex-margin font14">{{ item.i }}</span> -->
-                    <el-table :data="tableData" style="width: 100%">
-                        <el-table-column prop="date" label="Date" width="180" />
-                        <el-table-column prop="name" label="Name" width="180" />
-                        <el-table-column prop="address" label="Address" />
-                    </el-table>
-                </div>
+                :key="item.i" :isDraggable="item.isDraggable" :isResizable="item.isResizable" class="gridItem">
+                <el-card shadow="hover" >
+                    <Table ></Table>
+                </el-card>
             </grid-item>
         </grid-layout>
     </div>
 </template>
-
 <script setup lang="ts" name="index">
-import { reactive, onMounted, ref } from 'vue';
-const tableData = [
-  {
-    date: '2016-05-03',
-    name: 'Tom',
-    address: 'No. 189, Grove St, Los Angeles',
-  },
-  {
-    date: '2016-05-02',
-    name: 'Tom',
-    address: 'No. 189, Grove St, Los Angeles',
-  },
-  {
-    date: '2016-05-04',
-    name: 'Tom',
-    address: 'No. 189, Grove St, Los Angeles',
-  },
-  {
-    date: '2016-05-01',
-    name: 'Tom',
-    address: 'No. 189, Grove St, Los Angeles',
-  },
-]
+import { tr } from 'element-plus/es/locale';
+import { reactive, onMounted, ref ,defineAsyncComponent} from 'vue';
+const Table = defineAsyncComponent(() => import('/@/components/lowCode/table/table.vue'));
 let addOreSave = ref(true)
 // 页面加载时
 onMounted(() => {
@@ -67,14 +41,18 @@ let isresizable = ref(true)
 // 定义变量内容
 const state = reactive({
     layouts: [
-        { x: 0, y: 0, w: 2, h: 12, i: '0' }
+        { x: 0, y: 0, w: 2, h: 12, i: '0' ,isDraggable:true ,isResizable:true}
     ],
 });
 </script>
 <style scoped lang="scss">
+.gridItem{
+    overflow: scroll;
+}
 .pageIndex {
     width: 100%;
     height: 100%;
+    border: red solid;
 }
 
 .hader {
