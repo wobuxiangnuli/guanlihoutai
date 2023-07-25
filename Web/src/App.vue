@@ -1,16 +1,16 @@
 <template>
-	<el-config-provider :size="getGlobalComponentSize" :locale="getGlobalI18n">
-		<router-view v-show="setLockScreen" />
-		<LockScreen v-if="themeConfig.isLockScreen" />
-		<Setings ref="setingsRef" v-show="setLockScreen" />
-		<CloseFull v-if="!themeConfig.isLockScreen" />
-		<Upgrade v-if="needUpdate" />
-		<!-- <Sponsors /> -->
-	</el-config-provider>
+  <el-config-provider :size="getGlobalComponentSize" :locale="getGlobalI18n">
+    <router-view v-show="setLockScreen" />
+    <LockScreen v-if="themeConfig.isLockScreen" />
+    <Setings ref="setingsRef" v-show="setLockScreen" />
+    <CloseFull v-if="!themeConfig.isLockScreen" />
+    <Upgrade v-if="needUpdate" />
+    <!-- <Sponsors /> -->
+  </el-config-provider>
 </template>
 
 <script setup lang="ts" name="app">
-import { defineAsyncComponent, computed, ref, onBeforeMount, onMounted, onUnmounted, nextTick, watch } from 'vue';
+import { defineAsyncComponent, computed, ref, onBeforeMount, onMounted, onUnmounted, nextTick, watch, getCurrentInstance } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
@@ -21,7 +21,7 @@ import { Local, Session } from '/@/utils/storage';
 import mittBus from '/@/utils/mitt';
 import setIntroduction from '/@/utils/setIconfont';
 // import checkUpdate from '/@/utils/auto-update';
-
+const { proxy }: any = getCurrentInstance();
 // 引入组件
 const LockScreen = defineAsyncComponent(() => import('/@/layout/lockScreen/index.vue'));
 const Setings = defineAsyncComponent(() => import('/@/layout/navBars/topBar/setings.vue'));
@@ -75,6 +75,19 @@ onBeforeMount(() => {
 });
 // 页面加载时
 onMounted(() => {
+	// console.log(window.location.origin);
+	var url: string = encodeURIComponent(window.location.origin);
+	proxy.$get(`/api/systemsetting/urlsetting/${url}`).then((res: any) => {
+		if (res.data.result) {
+			var $favicon = document.createElement('link');
+			$favicon.rel = 'icon';
+			$favicon.href = res.data.result.icoFile.url;
+			document.head.appendChild($favicon);
+			Local.set('url_setting_config', res.data.result);
+			// console.log(Local.get('url_setting_config'));
+			console.log(themeConfig.value)
+		}
+	});
 	nextTick(() => {
 		// 监听布局配'置弹窗点击打开
 		mittBus.on('openSetingsDrawer', () => {
