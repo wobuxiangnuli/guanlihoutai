@@ -17,7 +17,14 @@ import vue3TreeOrg from 'vue3-tree-org'; // 组织架构图
 import 'vue3-tree-org/lib/vue3-tree-org.css'; // 组织架构图样式
 import 'animate.css'; // 动画库
 
+import { get, post, put, deletes } from './utils/ajax';
+
 const app = createApp(App);
+
+app.config.globalProperties.$get = get;
+app.config.globalProperties.$post = post;
+app.config.globalProperties.$put = put;
+app.config.globalProperties.$delete = deletes;
 
 directive(app);
 other.elSvg(app);
