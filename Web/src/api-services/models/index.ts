@@ -242,6 +242,7 @@ export * from './update-notice-input';
 export * from './update-org-input';
 export * from './update-plugin-input';
 export * from './update-pos-input';
+export * from './update-dataset-input';
 export * from './update-print-input';
 export * from './update-region-input';
 export * from './update-role-input';
