@@ -18,7 +18,7 @@ export const useThemeConfig = defineStore('themeConfig', {
 			 * 全局主题
 			 */
 			// 默认 primary 主题颜色
-			primary: '#DE2910', //红色:#DE2910 //蓝色:#11559C //绿色:#057748
+			primary: '#4196D3', //红色:#DE2910 //蓝色:#11559C //绿色:#057748
 			// 是否开启深色模式
 			isIsDark: false,
 
@@ -125,7 +125,7 @@ export const useThemeConfig = defineStore('themeConfig', {
 			 * 中的 `initSetLayoutChange(设置布局切换，重置主题样式)` 方法
 			 */
 			// 布局切换：可选值"<defaults|classic|transverse|columns>"，默认 defaults
-			layout: 'columns',
+			layout: 'defaults',
 
 			/**
 			 * 后端控制路由
@@ -141,11 +141,11 @@ export const useThemeConfig = defineStore('themeConfig', {
 			// 网站副标题（登录页顶部文字）
 			globalViceTitle: 'Admin.NET',
 			// 网站副标题（登录页顶部文字）
-			globalViceTitleMsg: '有可能是.NET最好用的通用权限开发框架',
+			globalViceTitleMsg: '',
 			// 默认初始语言，可选值"<zh-cn|en|zh-tw>"，默认 zh-cn
 			globalI18n: 'zh-cn',
 			// 默认全局组件大小，可选值"<large|'default'|small>"，默认 'large'
-			globalComponentSize: 'small',
+			globalComponentSize: 'default',
 		},
 	}),
 	actions: {

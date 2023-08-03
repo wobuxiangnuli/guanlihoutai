@@ -119,7 +119,7 @@ onMounted(() => {
 	proxy.$get('/api/systemsetting').then((res: any) => {
 		if (res.data.result) {
 			var data: any = res.data.result;
-			console.log(data);
+			// console.log(data);
 			model.value = { ...data.setting };
 			iconfiles.value = [
 				{

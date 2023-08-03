@@ -1,56 +1,62 @@
 <template>
-	<div class="login-container flex">
-		<div class="login-left flex-margin">
-			<div class="login-left-logo">
-				<img :src="logoMini" />
-				<div class="login-left-logo-text">
-					<span>{{ getThemeConfig.globalViceTitle }}</span>
-					<span class="login-left-logo-text-msg">{{ getThemeConfig.globalViceTitleMsg }}</span>
-				</div>
-			</div>
-			<el-carousel height="500px">
-				<el-carousel-item>
-					<img :src="loginIconTwo" class="login-icon-group-icon" />
-				</el-carousel-item>
-				<el-carousel-item>
-					<img :src="loginIconTwo1" class="login-icon-group-icon" />
-				</el-carousel-item>
-				<el-carousel-item>
-					<img :src="loginIconTwo2" class="login-icon-group-icon" />
-				</el-carousel-item>
-			</el-carousel>
-		</div>
-		<div class="login-right flex">
-			<div class="login-right-warp flex-margin">
-				<span class="login-right-warp-one"></span>
-				<span class="login-right-warp-two"></span>
-				<div class="login-right-warp-main">
-					<div class="login-right-warp-main-title">{{ getThemeConfig.globalTitle }}</div>
-					<div class="login-right-warp-main-form">
-						<div v-if="!state.isScan">
-							<el-tabs v-model="state.tabsActiveName">
-								<el-tab-pane :label="$t('message.label.one1')" name="account">
-									<Account />
-								</el-tab-pane>
-								<!-- <el-tab-pane :label="$t('message.label.two2')" name="mobile">
+  <div class="login-container flex">
+    <div class="login-left flex-margin">
+      <div class="login-left-logo">
+        <img v-if="logoMiniStr===''" :src="logoMini" />
+        <img v-else :src="logoMiniStr" />
+        <div class="login-left-logo-text">
+          <span>{{ getThemeConfig.globalViceTitle }}</span>
+          <span class="login-left-logo-text-msg">{{ getThemeConfig.globalViceTitleMsg }}</span>
+        </div>
+      </div>
+      <el-carousel height="500px" v-if="loginLunbo.length===0">
+        <el-carousel-item>
+          <img :src="loginIconTwo" class="login-icon-group-icon" />
+        </el-carousel-item>
+        <el-carousel-item>
+          <img :src="loginIconTwo1" class="login-icon-group-icon" />
+        </el-carousel-item>
+        <el-carousel-item>
+          <img :src="loginIconTwo2" class="login-icon-group-icon" />
+        </el-carousel-item>
+      </el-carousel>
+      <el-carousel height="500px" v-else>
+        <el-carousel-item v-for="(item,index) in loginLunbo" :key="index">
+          <img :src="item.url" class="login-icon-group-icon" />
+        </el-carousel-item>
+      </el-carousel>
+    </div>
+    <div class="login-right flex">
+      <div class="login-right-warp flex-margin">
+        <span class="login-right-warp-one"></span>
+        <span class="login-right-warp-two"></span>
+        <div class="login-right-warp-main">
+          <div class="login-right-warp-main-title">{{ getThemeConfig.globalTitle }}</div>
+          <div class="login-right-warp-main-form">
+            <div v-if="!state.isScan">
+              <el-tabs v-model="state.tabsActiveName">
+                <el-tab-pane :label="$t('message.label.one1')" name="account">
+                  <Account />
+                </el-tab-pane>
+                <!-- <el-tab-pane :label="$t('message.label.two2')" name="mobile">
 									<Mobile />
 								</el-tab-pane> -->
-							</el-tabs>
-						</div>
-						<!-- <Scan v-if="state.isScan" /> -->
-						<!-- <div class="login-content-main-scan" @click="state.isScan = !state.isScan">
+              </el-tabs>
+            </div>
+            <!-- <Scan v-if="state.isScan" /> -->
+            <!-- <div class="login-content-main-scan" @click="state.isScan = !state.isScan">
 							<i class="iconfont" :class="state.isScan ? 'icon-diannao1' : 'icon-barcode-qr'"></i>
 							<div class="login-content-main-scan-delta"></div>
 						</div> -->
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts" name="loginIndex">
-import { defineAsyncComponent, onMounted, reactive, computed } from 'vue';
+import { defineAsyncComponent, onMounted, reactive, computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useThemeConfig } from '/@/stores/themeConfig';
 import { NextLoading } from '/@/utils/loading';
@@ -58,6 +64,7 @@ import logoMini from '/@/assets/logo-mini.svg';
 import loginIconTwo from '/@/assets/login-icon-two.svg';
 import loginIconTwo1 from '/@/assets/login-icon-two1.svg';
 import loginIconTwo2 from '/@/assets/login-icon-two2.svg';
+import { Local } from '/@/utils/storage';
 
 // 引入组件
 const Account = defineAsyncComponent(() => import('/@/views/login/component/account.vue'));
@@ -75,8 +82,18 @@ const getThemeConfig = computed(() => {
 	return themeConfig.value;
 });
 // 页面加载时
+const logoMiniStr = ref('' as string);
+const loginLunbo = ref([] as any);
 onMounted(() => {
 	NextLoading.done();
+	// console.log(Local.get('url_setting_config'));
+	var data = Local.get('url_setting_config');
+	if (data) {
+		logoMiniStr.value = data.imgFile.url;
+		loginLunbo.value = data.rotationChartFileList;
+	} else {
+		// logoMini.value = '/@/assets/logo-mini.svg';
+	}
 });
 </script>
 

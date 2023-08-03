@@ -85,7 +85,9 @@ onMounted(() => {
 			document.head.appendChild($favicon);
 			Local.set('url_setting_config', res.data.result);
 			// console.log(Local.get('url_setting_config'));
-			console.log(themeConfig.value)
+			// console.log(themeConfig.value)
+			themeConfig.value.globalTitle=res.data.result.setting.name
+			themeConfig.value.globalViceTitle=res.data.result.setting.name
 		}
 	});
 	nextTick(() => {

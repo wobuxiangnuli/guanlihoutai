@@ -83,6 +83,7 @@ import { NextLoading } from '/@/utils/loading';
 
 import { clearTokens, feature, getAPI } from '/@/utils/axios-utils';
 import { SysAuthApi } from '/@/api-services/api';
+import { Local } from '/@/utils/storage';
 
 // 旋转图片滑块组件
 import verifyImg from '/@/assets/logo-mini.svg';
@@ -127,7 +128,10 @@ onMounted(async () => {
 	var res1 = await getAPI(SysAuthApi).apiSysAuthLoginConfigGet();
 	state.secondVerEnabled = res1.data.result.secondVerEnabled ?? true;
 	state.captchaEnabled = res1.data.result.captchaEnabled ?? true;
-
+	var data = Local.get('url_setting_config');
+	if (data) {
+		state.rotateVerifyImg = data.loginImgFile.url;
+	}
 	getCaptcha();
 });
 // 获取验证码

@@ -1,19 +1,26 @@
 <template>
-	<div class="layout-logo" v-if="setShowLogo" @click="onThemeConfigChange">
-		<img :src="logoMini" class="layout-logo-medium-img" v-if="showLogo" />
-		<span>{{ themeConfig.globalTitle }}</span>
-	</div>
-	<div class="layout-logo-size" v-else @click="onThemeConfigChange">
-		<img :src="logoMini" class="layout-logo-size-img" />
-	</div>
+  <div class="layout-logo" v-if="setShowLogo" @click="onThemeConfigChange">
+    <img :src="logoMiniStr" class="layout-logo-medium-img" v-if="showLogo" />
+    <span>{{ themeConfig.globalTitle }}</span>
+  </div>
+  <div class="layout-logo-size" v-else @click="onThemeConfigChange">
+    <img :src="logoMiniStr" class="layout-logo-size-img" />
+  </div>
 </template>
 
 <script setup lang="ts" name="layoutLogo">
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useThemeConfig } from '/@/stores/themeConfig';
 import logoMini from '/@/assets/logo-mini.svg';
-
+import { Local } from '/@/utils/storage';
+const logoMiniStr = ref(logoMini);
+onMounted(async () => {
+	var data = Local.get('url_setting_config');
+	if (data) {
+		logoMiniStr.value = data.imgFile.url;
+	}
+});
 // 定义变量内容
 const storesThemeConfig = useThemeConfig();
 const { themeConfig } = storeToRefs(storesThemeConfig);
