@@ -12,7 +12,7 @@ public class DataSetAddInput
     [Required(ErrorMessage = "Sql不能为空")]
     public string Sql { get; set; }
 
-    public string Description { get; set; }
+    public string? Description { get; set; }
 }
 /// <summary>
 /// DataSet更新
