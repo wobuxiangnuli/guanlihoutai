@@ -2,21 +2,33 @@
   <div class="pageIndex">
     <div class="hader">
       <el-button type="success" v-if="addOreSave" @click="Design">Design</el-button>
-      <el-button type="danger" v-if="!addOreSave">Add Widget</el-button>
+      <el-button type="danger" v-if="!addOreSave" @click="addWidget">Add Widget</el-button>
       <el-button type="primary" v-if="!addOreSave">Save Dashboard</el-button>
       <el-button v-if="!addOreSave" @click="Cancel">Cancel</el-button>
     </div>
     <grid-layout v-model:layout="state.layouts" :col-num="12" :row-height="30" :is-draggable="isdraggable" :is-resizable="isresizable" :is-mirrored="false" :vertical-compact="true" :margin="[10, 10]" :use-css-transforms="true" :static="false">
-      <grid-item v-for="item in state.layouts" :x="item.x" :y="item.y" :w="item.w" :h="item.h" :i="item.i" :key="item.i" :isDraggable="item.isDraggable" :isResizable="item.isResizable" class="gridItem">
+      <grid-item v-if="state.isTable" x="0" y="0" w="8" h="12" i="0" :isDraggable="true" :isResizable="true" class="gridItem">
         <el-card shadow="hover">
           <Table :url="url" :params="params"></Table>
         </el-card>
       </grid-item>
     </grid-layout>
+    <AddWidget ref="addWidgetRef" title="添加组件" @handleQuery="handleQuery" />
+    <TableSetting ref="tableSettingRef" title="表格配置" @handleQuery="handleQueryTable" />
   </div>
 </template>
 <script setup lang="ts" name="index">
 import { reactive, onMounted, ref, defineAsyncComponent } from 'vue';
+import AddWidget from './components/addWidget.vue';
+import TableSetting from './components/tableSetting.vue';
+
+// 定义变量内容
+const state = reactive({
+	layouts: [{ x: 0, y: 0, w: 8, h: 12, i: '0', isDraggable: true, isResizable: true }],
+	isTable: false as boolean,
+});
+const addWidgetRef = ref<InstanceType<typeof AddWidget>>();
+const tableSettingRef = ref<InstanceType<typeof TableSetting>>();
 const Table = defineAsyncComponent(() => import('/@/components/lowCode/table/table.vue'));
 let addOreSave = ref(true);
 const url = ref('/api/Component/table/data' as string);
@@ -35,10 +47,17 @@ const Cancel = () => {
 let isdraggable = ref(true);
 // 标识栅格元素是否可调整大小
 let isresizable = ref(true);
-// 定义变量内容
-const state = reactive({
-	layouts: [{ x: 0, y: 0, w: 8, h: 12, i: '0', isDraggable: true, isResizable: true }],
-});
+const addWidget = () => {
+	addWidgetRef.value?.openDialog();
+};
+const handleQuery = (type: string) => {
+	switch (type) {
+		case 'table':
+			// state.isTable = true;
+			tableSettingRef.value?.openDialog();
+			break;
+	}
+};
 </script>
 <style scoped lang="scss">
 .gridItem {
@@ -47,7 +66,7 @@ const state = reactive({
 .pageIndex {
 	width: 100%;
 	height: 100%;
-	border: red solid;
+	// border: red solid;
 }
 
 .hader {
