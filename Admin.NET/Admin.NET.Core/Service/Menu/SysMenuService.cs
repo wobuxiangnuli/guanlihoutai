@@ -262,4 +262,18 @@ public class SysMenuService : IDynamicApiController, ITransient
         var roleIdList = await _sysUserRoleService.GetUserRoleIdList(_userManager.UserId);
         return await _sysRoleMenuService.GetRoleMenuIdList(roleIdList);
     }
+
+    #region 额外增加的方法
+
+    /// <summary>
+    /// 获取单个菜单详情
+    /// </summary>
+    /// <returns></returns>
+    [DisplayName("获取单个菜单详情")]
+    public async Task<SysMenu> Get(long id)
+    {
+        return await _sysMenuRep.AsQueryable().FirstAsync(d => d.Id == id);
+    }
+
+    #endregion
 }

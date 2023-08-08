@@ -1,4 +1,4 @@
-import { createApp } from 'vue';
+import { createApp, reactive } from 'vue';
 import pinia from '/@/stores/index';
 import App from '/@/App.vue';
 import router from '/@/router';
@@ -25,6 +25,14 @@ app.config.globalProperties.$get = get;
 app.config.globalProperties.$post = post;
 app.config.globalProperties.$put = put;
 app.config.globalProperties.$delete = deletes;
+
+// app.config.globalProperties.$showbtn = false as boolean;
+// 创建响应式的全局变量
+const globalData = reactive({
+  showBtn: true,
+});
+// 挂载全局变量到Vue实例的provide选项上
+app.provide('globalData', globalData);
 
 directive(app);
 other.elSvg(app);

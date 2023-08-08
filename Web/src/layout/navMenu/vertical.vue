@@ -1,33 +1,28 @@
 <template>
-	<el-menu
-		router
-		:default-active="state.defaultActive"
-		background-color="transparent"
-		:collapse="state.isCollapse"
-		:unique-opened="getThemeConfig.isUniqueOpened"
-		:collapse-transition="false"
-	>
-		<template v-for="val in menuLists">
-			<el-sub-menu :index="val.path" v-if="val.children && val.children.length > 0" :key="val.path">
-				<template #title>
-					<SvgIcon :name="val.meta.icon" />
-					<span>{{ $t(val.meta.title) }}</span>
-				</template>
-				<SubItem :chil="val.children" />
-			</el-sub-menu>
-			<template v-else>
-				<el-menu-item :index="val.path" :key="val.path">
-					<SvgIcon :name="val.meta.icon" />
-					<template #title v-if="!val.meta.isLink || (val.meta.isLink && val.meta.isIframe)">
-						<span>{{ $t(val.meta.title) }}</span>
-					</template>
-					<template #title v-else>
-						<a class="w100" @click.prevent="onALinkClick(val)">{{ $t(val.meta.title) }}</a>
-					</template>
-				</el-menu-item>
-			</template>
-		</template>
-	</el-menu>
+  <el-menu router :default-active="state.defaultActive" background-color="transparent" :collapse="state.isCollapse" :unique-opened="getThemeConfig.isUniqueOpened" :collapse-transition="false">
+    <template v-for="val in menuLists">
+      <el-sub-menu :index="val.path" v-if="val.children && val.children.length > 0" :key="val.path">
+        <template #title>
+          <SvgIcon :name="val.meta.icon" />
+          <span>{{ $t(val.meta.title) }}</span>
+          <rightmenuoption :menus="val" />
+        </template>
+        <SubItem :chil="val.children" />
+      </el-sub-menu>
+      <template v-else>
+        <el-menu-item :index="val.path" :key="val.path">
+          <SvgIcon :name="val.meta.icon" />
+          <template #title v-if="!val.meta.isLink || (val.meta.isLink && val.meta.isIframe)">
+            <span>{{ $t(val.meta.title) }}</span>
+            <rightmenuoption :menus="val" />
+          </template>
+          <template #title v-else>
+            <a class="w100" @click.prevent="onALinkClick(val)">{{ $t(val.meta.title) }}</a>
+          </template>
+        </el-menu-item>
+      </template>
+    </template>
+  </el-menu>
 </template>
 
 <script setup lang="ts" name="navMenuVertical">
@@ -39,6 +34,7 @@ import other from '/@/utils/other';
 
 // 引入组件
 const SubItem = defineAsyncComponent(() => import('/@/layout/navMenu/subItem.vue'));
+const rightmenuoption = defineAsyncComponent(() => import('/@/components/customOption/menu/rightmenuoption.vue'));
 
 // 定义父组件传过来的值
 const props = defineProps({
