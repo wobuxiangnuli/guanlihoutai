@@ -3,31 +3,26 @@
 		<el-dialog v-model="state.isShowDialog" draggable :close-on-click-modal="false" width="70%">
 			<template #header>
 				<div style="color: #fff">
-					<el-icon size="16" style="margin-right: 3px; display: inline; vertical-align: middle"> <ele-Edit />
-					</el-icon>
+					<el-icon size="16" style="margin-right: 3px; display: inline; vertical-align: middle"> <ele-Edit /> </el-icon>
 					<span> {{ props.title }} </span>
 				</div>
 			</template>
 			<el-form :model="state.ruleForm" ref="ruleFormRef" label-width="auto">
 				<el-row :gutter="35">
 					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
-						<el-form-item label="名称" prop="name"
-							:rules="[{ required: true, message: '名称不能为空', trigger: 'blur' }]">
+						<el-form-item label="名称" prop="name" :rules="[{ required: true, message: '名称不能为空', trigger: 'blur' }]">
 							<el-input v-model="state.ruleForm.name" placeholder="请输入名称" clearable />
 						</el-form-item>
 					</el-col>
 					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
-						<el-form-item label="SQL" prop="sql"
-							:rules="[{ required: true, message: 'SQL语句不能为空', trigger: 'blur' }]">
-							<el-input v-model="state.ruleForm.sql" placeholder="请输入SQL语句" rows="10" clearable
-								type="textarea" />
+						<el-form-item label="SQL" prop="sql" :rules="[{ required: true, message: 'SQL语句不能为空', trigger: 'blur' }]">
+							<el-input v-model="state.ruleForm.sql" placeholder="请输入SQL语句" rows="10" clearable type="textarea" />
 						</el-form-item>
 					</el-col>
 
 					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
 						<el-form-item label="备注">
-							<el-input v-model="state.ruleForm.description" placeholder="请输入备注内容" rows="7" clearable
-								type="textarea" />
+							<el-input v-model="state.ruleForm.description" placeholder="请输入备注内容" rows="7" clearable type="textarea" />
 						</el-form-item>
 					</el-col>
 				</el-row>
@@ -59,16 +54,16 @@ const state = reactive({
 		id: null,
 		name: '',
 		sql: '',
-		description: ''
+		description: '',
 	},
 });
 
 // 打开弹窗
 const openDialog = (row: any) => {
-	state.ruleForm.id = row.id
-	state.ruleForm.name = row.name
-	state.ruleForm.sql = row.sql
-	state.ruleForm.description = row.description
+	state.ruleForm.id = row.id;
+	state.ruleForm.name = row.name;
+	state.ruleForm.sql = row.sql;
+	state.ruleForm.description = row.description;
 	console.log(state.ruleForm, 'resres');
 
 	// state.ruleForm = {
@@ -96,28 +91,25 @@ const submitapi = () => {
 		if (!valid) return;
 
 		if (state.ruleForm.id != undefined && state.ruleForm.id > 0) {
-
 			// 编辑
-			proxy.$put(`/api/DataSet/sql/updata`, state.ruleForm).then((res: any) => {
+			proxy.$put(`/api/DataSet/sql/update`, state.ruleForm).then((res: any) => {
 				if (res.data.code == 200) {
 					ElMessage.success('编辑成功');
 					closeDialog();
-					const $emit = defineEmits(['handleQuery'])
-					$emit('handleQuery')
+					const $emit = defineEmits(['handleQuery']);
+					$emit('handleQuery');
 				}
 			});
-
 		} else {
 			// 添加
 			proxy.$post(`/api/DataSet/sql/add`, state.ruleForm).then((res: any) => {
 				if (res.data.code == 200) {
 					ElMessage.success('添加成功');
 					closeDialog();
-					const $emit = defineEmits(['handleQuery'])
-					$emit('handleQuery')
+					const $emit = defineEmits(['handleQuery']);
+					$emit('handleQuery');
 				}
 			});
-
 		}
 	});
 };

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using FastAdmin.Plugin.DataSet.Enum;
 using FastAdmin.Plugin.DataSet.Service.SqlQuery.Dto;
 
 namespace FastAdmin.Plugin.DataSet.Util;
@@ -74,10 +75,10 @@ public class DataSetSqlCheck
                 infos.Add(new DataSetColumnInfo
                 {
                     ColumnName = columnName,
-                    ColumnFieldType = dataType.FullName
+                    ColumnFieldType = dataType.FullName,
+                    ColumnFieldDataType = 将数据库列数据类型转换为指定类型(dataType.FullName)
                 });
             }
-
             return infos;
         }
         catch (Exception e)
@@ -108,6 +109,24 @@ public class DataSetSqlCheck
             {
                 throw Oops.Oh($"不能在sql中执行 {s}语句");
             }
+        }
+    }
+
+    private static ColumnFieldDataType 将数据库列数据类型转换为指定类型(string 数据库列数据类型)
+    {
+        switch (数据库列数据类型)
+        {
+            case "System.Int64":
+            case "System.Int32":
+                return ColumnFieldDataType.Int;
+            case "System.String":
+                return ColumnFieldDataType.String;
+            case "System.DateTime":
+                return ColumnFieldDataType.DateTime;
+            case "System.Boolean":
+                return ColumnFieldDataType.Bool;
+            default:
+                return ColumnFieldDataType.String;
         }
     }
 }

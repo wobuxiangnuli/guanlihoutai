@@ -1,6 +1,7 @@
 ﻿using FastAdmin.Plugin.DataSet.Const;
 using FastAdmin.Plugin.DataSet.Service.SqlQuery.Dto;
 using FastAdmin.Plugin.DataSet.Util;
+using Mapster;
 using System.Security.Claims;
 using static SKIT.FlurlHttpClient.Wechat.Api.Models.CgibinUserInfoBatchGetRequest.Types;
 
@@ -54,7 +55,8 @@ public class DataSetOperationService : IDynamicApiController
         if (model.Sql.Trim() == input.Sql.Trim())
         {
             var dataResult = DataSetSqlCheck.获取sql执行结果(input.Sql, db);
-            await _datesetRepository.AsUpdateable(input.Adapt<Entity.DataSet>()).ExecuteCommandAsync();
+            var updateModel = input.Adapt(model);
+            await _datesetRepository.AsUpdateable(updateModel).ExecuteCommandAsync();
             return new { data = dataResult, changeInfos = new List<dynamic>() };
         }
         // 如果sql更新了那么 就把原来的复制一个标记为删除，并更新当前
@@ -88,7 +90,7 @@ public class DataSetOperationService : IDynamicApiController
                 c.DataSetColumnInfos,
                 c.CreateTime,
                 c.UpdateTime
-            }, true)
+            })
             .ToPagedListAsync(page, limit);
         return res.Items.ToList();
     }
@@ -98,5 +100,21 @@ public class DataSetOperationService : IDynamicApiController
     {
         var model = await _datesetRepository.GetByIdAsync(id);
         await _datesetRepository.FakeDeleteAsync(model);
+    }
+
+    [DisplayName("dataSet名称模糊查询")]
+    public async Task<dynamic> GetList(string name)
+    {
+        var result = await _datesetRepository.AsQueryable().Where(c => c.Name.Contains(name)).Select(c => new
+        {
+            c.Name,
+            c.Id,
+            c.Description,
+            c.Sql,
+            c.DataSetColumnInfos,
+            c.CreateTime,
+            c.UpdateTime
+        }).ToListAsync();
+        return result;
     }
 }
