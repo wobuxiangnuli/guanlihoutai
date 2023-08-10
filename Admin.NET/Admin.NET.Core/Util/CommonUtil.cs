@@ -90,4 +90,43 @@ public static class CommonUtil
             return null;
         }
     }
+
+    /// <summary>
+    /// 导出模板Excel
+    /// </summary>
+    /// <param name="fileName"></param>
+    /// <param name="fileDto"></param>
+    /// <returns></returns>
+    public static async Task<IActionResult> ExportExcelTemplate(string fileName, dynamic fileDto)
+    {
+        fileName = $"{fileName}_{DateTime.Now.ToString("yyyyMMddHHmmss")}.xlsx";
+
+        IImporter importer = new ExcelImporter();
+        MethodInfo generateTemplateMethod = importer.GetType().GetMethod("GenerateTemplate");
+        MethodInfo closedGenerateTemplateMethod = generateTemplateMethod.MakeGenericMethod(fileDto.GetType());
+        var res = await (Task<dynamic>)closedGenerateTemplateMethod.Invoke(importer, new object[] { Path.Combine(App.WebHostEnvironment.WebRootPath, fileName) });
+
+        return new FileStreamResult(new FileStream(res.FileName, FileMode.Open), "application/octet-stream") { FileDownloadName = fileName };
+    }
+
+    /// <summary>
+    /// 导入数据Excel
+    /// </summary>
+    /// <param name="file"></param>
+    /// <param name="dataDto"></param>
+    /// <returns></returns>
+    public static async Task<dynamic> ImportExcelData([Required] IFormFile file, dynamic dataDto)
+    {
+        var newFile = await App.GetRequiredService<SysFileService>().UploadFile(file, "");
+        var filePath = Path.Combine(App.WebHostEnvironment.WebRootPath, newFile.FilePath, newFile.Name);
+
+        IImporter importer = new ExcelImporter();
+        MethodInfo importMethod = importer.GetType().GetMethod("Import");
+        MethodInfo closedImportMethod = importMethod.MakeGenericMethod(dataDto.GetType());
+        var res = await (Task<dynamic>)closedImportMethod.Invoke(importer, new object[] { filePath });
+        if (res == null || res.Exception != null)
+            throw Oops.Oh("导入异常:" + res.Exception);
+
+        return res.Data;
+    }
 }

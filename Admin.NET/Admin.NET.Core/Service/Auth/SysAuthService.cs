@@ -9,7 +9,6 @@
 
 using Furion.SpecificationDocument;
 using Lazy.Captcha.Core;
-using Microsoft.Extensions.Caching.Memory;
 
 namespace Admin.NET.Core.Service;
 
@@ -25,8 +24,8 @@ public class SysAuthService : IDynamicApiController, ITransient
     private readonly SysMenuService _sysMenuService;
     private readonly SysOnlineUserService _sysOnlineUserService;
     private readonly SysConfigService _sysConfigService;
-    private readonly IMemoryCache _cache;
     private readonly ICaptcha _captcha;
+    private readonly SysCacheService _sysCacheService;
 
     public SysAuthService(UserManager userManager,
         SqlSugarRepository<SysUser> sysUserRep,
@@ -34,8 +33,8 @@ public class SysAuthService : IDynamicApiController, ITransient
         SysMenuService sysMenuService,
         SysOnlineUserService sysOnlineUserService,
         SysConfigService sysConfigService,
-        IMemoryCache cache,
-        ICaptcha captcha)
+        ICaptcha captcha,
+        SysCacheService sysCacheService)
     {
         _userManager = userManager;
         _sysUserRep = sysUserRep;
@@ -43,8 +42,8 @@ public class SysAuthService : IDynamicApiController, ITransient
         _sysMenuService = sysMenuService;
         _sysOnlineUserService = sysOnlineUserService;
         _sysConfigService = sysConfigService;
-        _cache = cache;
         _captcha = captcha;
+        _sysCacheService = sysCacheService;
     }
 
     /// <summary>
@@ -167,7 +166,7 @@ public class SysAuthService : IDynamicApiController, ITransient
     /// <param name="accessToken"></param>
     /// <returns></returns>
     [DisplayName("获取刷新Token")]
-    public string GetRefreshToken(string accessToken)
+    public string GetRefreshToken([FromQuery] string accessToken)
     {
         var refreshTokenExpire = _sysConfigService.GetRefreshTokenExpire().GetAwaiter().GetResult();
         return JWTEncryption.GenerateRefreshToken(accessToken, refreshTokenExpire);
@@ -200,14 +199,13 @@ public class SysAuthService : IDynamicApiController, ITransient
     }
 
     /// <summary>
-    /// 获取用户配置
+    /// 获取水印配置
     /// </summary>
     /// <returns></returns>
     [SuppressMonitor]
-    [DisplayName("获取用户配置")]
-    public async Task<dynamic> GetUserConfig()
+    [DisplayName("获取水印配置")]
+    public async Task<dynamic> GetWatermarkConfig()
     {
-        //返回用户和通用配置
         var watermarkEnabled = await _sysConfigService.GetConfigValue<bool>(CommonConst.SysWatermark);
         return new { WatermarkEnabled = watermarkEnabled };
     }
@@ -221,40 +219,50 @@ public class SysAuthService : IDynamicApiController, ITransient
     [DisplayName("获取验证码")]
     public dynamic GetCaptcha()
     {
-        var codeId = YitIdHelper.NextId();
-        var captcha = _captcha.Generate(codeId.ToString());
+        var codeId = YitIdHelper.NextId().ToString();
+        var captcha = _captcha.Generate(codeId);
         return new { Id = codeId, Img = captcha.Base64 };
     }
 
     /// <summary>
-    /// swagger登录检查
+    /// Swagger登录检查
     /// </summary>
     /// <returns></returns>
     [AllowAnonymous]
-    [HttpPost("/api/swagger/checkUrl"), NonUnify]
-    [DisplayName("swagger登录检查")]
+    [HttpPost("/swagger/checkUrl"), NonUnify]
+    [DisplayName("Swagger登录检查")]
     public int SwaggerCheckUrl()
     {
-        return _cache.Get<bool>(CacheConst.SwaggerLogin) ? 200 : 401;
+        return _httpContextAccessor.HttpContext.User.Identity.IsAuthenticated ? 200 : 401;
     }
 
     /// <summary>
-    /// swagger登录提交
+    /// Swagger登录提交
     /// </summary>
     /// <param name="auth"></param>
     /// <returns></returns>
     [AllowAnonymous]
-    [HttpPost("/api/swagger/submitUrl"), NonUnify]
-    [DisplayName("swagger登录提交")]
-    public int SwaggerSubmitUrl([FromForm] SpecificationAuth auth)
+    [HttpPost("/swagger/submitUrl"), NonUnify]
+    [DisplayName("Swagger登录提交")]
+    public async Task<int> SwaggerSubmitUrl([FromForm] SpecificationAuth auth)
     {
-        var userName = App.GetConfig<string>("SpecificationDocumentSettings:LoginInfo:UserName");
-        var password = App.GetConfig<string>("SpecificationDocumentSettings:LoginInfo:Password");
-        if (auth.UserName == userName && auth.Password == password)
+        try
         {
-            _cache.Set<bool>(CacheConst.SwaggerLogin, true);
+            _sysCacheService.Set(CommonConst.SysCaptcha, false);
+
+            await Login(new LoginInput
+            {
+                Account = auth.UserName,
+                Password = auth.Password
+            });
+
+            _sysCacheService.Remove(CommonConst.SysCaptcha);
+
             return 200;
         }
-        return 401;
+        catch (Exception)
+        {
+            return 401;
+        }
     }
 }

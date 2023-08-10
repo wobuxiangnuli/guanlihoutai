@@ -67,20 +67,23 @@ public class Startup : AppStartup
             options.IgnorePropertyTypes = new[] { typeof(byte[]) };
         });
 
+        // Json序列化设置
+        static void SetNewtonsoftJsonSetting(JsonSerializerSettings setting)
+        {
+            setting.DateTimeZoneHandling = DateTimeZoneHandling.Local;
+            setting.DateFormatString = "yyyy-MM-dd HH:mm:ss"; // 时间格式化
+            setting.ReferenceLoopHandling = ReferenceLoopHandling.Ignore; // 忽略循环引用
+            // setting.ContractResolver = new CamelCasePropertyNamesContractResolver(); // 解决动态对象属性名大写
+            // setting.NullValueHandling = NullValueHandling.Ignore; // 忽略空值
+            // setting.Converters.AddLongTypeConverters(); // long转string（防止js精度溢出） 超过16位开启
+            // setting.MetadataPropertyHandling = MetadataPropertyHandling.Ignore; // 解决DateTimeOffset异常
+            // setting.DateParseHandling = DateParseHandling.None; // 解决DateTimeOffset异常
+            // setting.Converters.Add(new IsoDateTimeConverter { DateTimeStyles = DateTimeStyles.AssumeUniversal }); // 解决DateTimeOffset异常
+        };
+
         services.AddControllersWithViews()
             .AddAppLocalization()
-            .AddNewtonsoftJson(options =>
-            {
-                options.SerializerSettings.DateTimeZoneHandling = DateTimeZoneHandling.Local;
-                options.SerializerSettings.DateFormatString = "yyyy-MM-dd HH:mm:ss"; // 时间格式化
-                options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore; // 忽略循环引用
-                // options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver(); // 解决动态对象属性名大写
-                // options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore; // 忽略空值
-                // options.SerializerSettings.Converters.AddLongTypeConverters(); // long转string（防止js精度溢出） 超过16位开启
-                // options.SerializerSettings.MetadataPropertyHandling = MetadataPropertyHandling.Ignore; // 解决DateTimeOffset异常
-                // options.SerializerSettings.DateParseHandling = DateParseHandling.None; // 解决DateTimeOffset异常
-                // options.SerializerSettings.Converters.Add(new IsoDateTimeConverter { DateTimeStyles = DateTimeStyles.AssumeUniversal }); // 解决DateTimeOffset异常
-            })
+            .AddNewtonsoftJson(options => SetNewtonsoftJsonSetting(options.SerializerSettings))
             //.AddXmlSerializerFormatters()
             //.AddXmlDataContractSerializerFormatters()
             .AddInjectWithUnifyResult<AdminResultProvider>();
@@ -159,7 +162,7 @@ public class Startup : AppStartup
             {
                 options.KeepAliveInterval = TimeSpan.FromSeconds(5);
             })
-            .AddJsonProtocol();
+            .AddNewtonsoftJsonProtocol(options => SetNewtonsoftJsonSetting(options.PayloadSerializerSettings));
 
         // logo显示
         services.AddLogoDisplay();

@@ -33,11 +33,9 @@
         "DocExpansionState": "List", // List、Full、None
         "EnableAllGroups": true,
         "LoginInfo": {
-            "Enabled": false, // 是否开启Swagger登录
-            "CheckUrl": "/api/swagger/checkUrl",
-            "SubmitUrl": "/api/swagger/submitUrl",
-            "UserName": "admin",
-            "Password": "000000"
+            "Enabled": true, // 是否开启Swagger登录
+            "CheckUrl": "/swagger/checkUrl",
+            "SubmitUrl": "/swagger/submitUrl"
         },
         "EnumToNumber": true // 枚举类型生成值类型
     }

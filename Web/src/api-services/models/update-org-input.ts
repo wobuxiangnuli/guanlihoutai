@@ -74,6 +74,12 @@ export interface UpdateOrgInput {
      */
     code?: string | null;
     /**
+     * 级别
+     * @type {number}
+     * @memberof UpdateOrgInput
+     */
+    level?: number | null;
+    /**
      * 机构类型
      * @type {string}
      * @memberof UpdateOrgInput
