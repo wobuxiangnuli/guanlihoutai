@@ -19,5 +19,6 @@ public enum ColumnFieldDataType
     String = 0,
     Int=1,
     DateTime=2,
-    Bool=3
+    Bool=3,
+    Decimal=4
 }

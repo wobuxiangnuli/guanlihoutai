@@ -118,6 +118,7 @@ public class DataSetSqlCheck
         {
             case "System.Int64":
             case "System.Int32":
+            case "System.Int16":
                 return ColumnFieldDataType.Int;
             case "System.String":
                 return ColumnFieldDataType.String;
@@ -125,6 +126,9 @@ public class DataSetSqlCheck
                 return ColumnFieldDataType.DateTime;
             case "System.Boolean":
                 return ColumnFieldDataType.Bool;
+            case "System.Decimal":
+            case "System.Double":
+                return ColumnFieldDataType.Decimal;
             default:
                 return ColumnFieldDataType.String;
         }
