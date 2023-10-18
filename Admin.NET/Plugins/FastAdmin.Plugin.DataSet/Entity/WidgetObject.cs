@@ -42,7 +42,9 @@ public class WidgetObject : EntityBaseData
 
     [SugarColumn(ColumnDescription = "WidgetObject 当前widget的功能及注意事项描述")]
     public string Description { get; set; }
-
-    [SugarColumn(IsJson = true, ColumnDescription = "widget对象的数据集合列的显示等设置")]
-    public List<WidgetObjectDataColumnSettings> WidgetObjectDataColumnSettings { get; set; }
+    /// <summary>
+    /// 不弄成对象是因为考虑性能，反序列化需要浪费太多性能
+    /// </summary>
+    [SugarColumn(IsJson = true, ColumnDescription = "widget显示设定,可能包含数据源、排序等,根据类型存放不同数据")]
+    public string Settings { get; set; }
 }
