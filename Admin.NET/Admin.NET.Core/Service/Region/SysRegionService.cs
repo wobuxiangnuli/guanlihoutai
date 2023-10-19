@@ -119,10 +119,42 @@ public class SysRegionService : IDynamicApiController, ITransient
     /// </summary>
     /// <returns></returns>
     [DisplayName("同步行政区域")]
-    public async Task Sync()
+    public void Sync()
+    {
+        GetAllRegion();
+    }
+
+    /// <summary>
+    /// 获取所有省的选择数据
+    /// </summary>
+    /// <returns></returns>
+    [DisplayName("获取所有省的选择数据")]
+    public async Task<dynamic> GetProvince()
+    {
+        return await _sysRegionRep.AsQueryable().Where(u => u.Level == 1)
+            .Select(c=>new
+        {
+            id=c.Id,
+            name=c.Name,
+        }).ToListAsync();
+    }
+    /// <summary>
+    /// 根据父级id获取下属行政区域
+    /// </summary>
+    /// <returns></returns>
+    [DisplayName("根据父级id获取下属行政区域")]
+    public async Task<dynamic> GetChildRegionByPid(long pid)
+    {
+        return await _sysRegionRep.AsQueryable().Where(u => u.Pid == pid)
+            .Select(c => new
+            {
+                id = c.Id,
+                name = c.Name,
+            }).ToListAsync();
+    }
+    private async Task GetAllRegion()
     {
         await _sysRegionRep.DeleteAsync(u => u.Id > 0);
-
         // 国家统计局行政区域2022年
         var url = "http://www.stats.gov.cn/sj/tjbz/tjyqhdmhcxhfdm/2022/index.html";
         var context = BrowsingContext.New(Configuration.Default.WithDefaultLoader());
