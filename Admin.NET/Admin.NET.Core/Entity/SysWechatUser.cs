@@ -13,7 +13,7 @@ namespace Admin.NET.Core;
 /// 系统微信用户表
 /// </summary>
 [SugarTable(null, "系统微信用户表")]
-[SystemTable]
+[SysTable]
 public class SysWechatUser : EntityBase
 {
     /// <summary>
@@ -25,7 +25,6 @@ public class SysWechatUser : EntityBase
     /// <summary>
     /// 系统用户
     /// </summary>
-    [SugarColumn(IsIgnore = true)]
     [Navigate(NavigateType.OneToOne, nameof(UserId))]
     public SysUser SysUser { get; set; }
 

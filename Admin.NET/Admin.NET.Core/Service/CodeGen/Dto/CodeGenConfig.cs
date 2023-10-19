@@ -30,10 +30,19 @@ public class CodeGenConfig
     public string ColumnName { get; set; }
 
     /// <summary>
+    /// 实体属性名
+    /// </summary>
+    public string PropertyName { get; set; }
+
+    /// <summary>
+    /// 字段数据长度
+    /// </summary>
+    public int ColumnLength { get; set; }
+
+    /// <summary>
     /// 数据库字段名(首字母小写)
     /// </summary>
-    public string LowerColumnName =>
-        string.IsNullOrWhiteSpace(ColumnName) ? null : ColumnName[..1].ToLower() + ColumnName[1..];
+    public string LowerPropertyName => string.IsNullOrWhiteSpace(PropertyName) ? null : PropertyName[..1].ToLower() + PropertyName[1..];
 
     /// <summary>
     /// 字段描述
@@ -146,7 +155,7 @@ public class CodeGenConfig
             }
             else if (EffectType == "Upload")
             {
-                str = "sysFile_FK_" + LowerColumnName;
+                str = "sysFile_FK_" + LowerPropertyName;
             }
             return str;
         }
@@ -166,4 +175,9 @@ public class CodeGenConfig
     /// 父级字段
     /// </summary>
     public string PidColumn { get; set; }
+
+    /// <summary>
+    /// 排序
+    /// </summary>
+    public int OrderNo { get; set; }
 }

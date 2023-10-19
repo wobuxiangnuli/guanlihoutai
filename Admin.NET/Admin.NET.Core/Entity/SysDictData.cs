@@ -13,7 +13,7 @@ namespace Admin.NET.Core;
 /// 系统字典值表
 /// </summary>
 [SugarTable(null, "系统字典值表")]
-[SystemTable]
+[SysTable]
 public class SysDictData : EntityBase
 {
     /// <summary>
@@ -25,7 +25,6 @@ public class SysDictData : EntityBase
     /// <summary>
     /// 字典类型
     /// </summary>
-    [SugarColumn(IsIgnore = true)]
     [Navigate(NavigateType.OneToOne, nameof(DictTypeId))]
     public SysDictType DictType { get; set; }
 

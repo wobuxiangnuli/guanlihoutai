@@ -13,7 +13,7 @@ namespace Admin.NET.Core;
 /// 系统用户角色表
 /// </summary>
 [SugarTable(null, "系统用户角色表")]
-[SystemTable]
+[SysTable]
 public class SysUserRole : EntityBaseId
 {
     /// <summary>
@@ -21,6 +21,12 @@ public class SysUserRole : EntityBaseId
     /// </summary>
     [SugarColumn(ColumnDescription = "用户Id")]
     public long UserId { get; set; }
+
+    /// <summary>
+    /// 用户
+    /// </summary>
+    [Navigate(NavigateType.OneToOne, nameof(UserId))]
+    public SysUser SysUser { get; set; }
 
     /// <summary>
     /// 角色Id
@@ -31,7 +37,6 @@ public class SysUserRole : EntityBaseId
     /// <summary>
     /// 角色
     /// </summary>
-    [SugarColumn(IsIgnore = true)]
     [Navigate(NavigateType.OneToOne, nameof(RoleId))]
     public SysRole SysRole { get; set; }
 }

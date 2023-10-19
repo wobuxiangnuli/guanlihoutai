@@ -1,4 +1,4 @@
-// 麻省理工学院许可证
+﻿// 麻省理工学院许可证
 //
 // 版权所有 (c) 2021-2023 zuohuaijun，大名科技（天津）有限公司  联系电话/微信：18020030720  QQ：515096995
 //
@@ -37,7 +37,7 @@ public class SysDictDataService : IDynamicApiController, ITransient
             .Where(u => u.DictTypeId == input.DictTypeId)
             .WhereIF(code, u => u.Code.Contains(input.Code))
             .WhereIF(value, u => u.Value.Contains(input.Value))
-            .OrderBy(u => u.OrderNo)
+            .OrderBy(u => new { u.OrderNo, u.Code })
             .ToPagedListAsync(input.Page, input.PageSize);
     }
 
@@ -136,12 +136,13 @@ public class SysDictDataService : IDynamicApiController, ITransient
     /// </summary>
     /// <param name="dictTypeId"></param>
     /// <returns></returns>
-    [ApiDescriptionSettings(false)]
+    [NonAction]
     public async Task<List<SysDictData>> GetDictDataListByDictTypeId(long dictTypeId)
     {
         return await _sysDictDataRep.AsQueryable()
             .Where(u => u.DictTypeId == dictTypeId)
-            .OrderBy(u => u.OrderNo).ToListAsync();
+            .OrderBy(u => new { u.OrderNo, u.Code })
+            .ToListAsync();
     }
 
     /// <summary>
@@ -153,9 +154,10 @@ public class SysDictDataService : IDynamicApiController, ITransient
     public async Task<List<SysDictData>> GetDataList(string code)
     {
         return await _sysDictDataRep.Context.Queryable<SysDictType>()
-            .LeftJoin<SysDictData>((a, b) => a.Id == b.DictTypeId)
-            .Where((a, b) => a.Code == code && a.Status == StatusEnum.Enable && b.Status == StatusEnum.Enable)
-            .Select((a, b) => b).ToListAsync();
+            .LeftJoin<SysDictData>((u, a) => u.Id == a.DictTypeId)
+            .Where((u, a) => u.Code == code && u.Status == StatusEnum.Enable && a.Status == StatusEnum.Enable)
+            .OrderBy((u, a) => new { a.OrderNo, a.Code })
+            .Select((u, a) => a).ToListAsync();
     }
 
     /// <summary>
@@ -167,10 +169,11 @@ public class SysDictDataService : IDynamicApiController, ITransient
     public async Task<List<SysDictData>> GetDataList([FromQuery] QueryDictDataInput input)
     {
         return await _sysDictDataRep.Context.Queryable<SysDictType>()
-            .LeftJoin<SysDictData>((a, b) => a.Id == b.DictTypeId)
-            .Where((a, b) => a.Code == input.Code)
-            .WhereIF(input.Status.HasValue, (a, b) => b.Status == (StatusEnum)input.Status.Value)
-            .Select((a, b) => b).ToListAsync();
+            .LeftJoin<SysDictData>((u, a) => u.Id == a.DictTypeId)
+            .Where((u, a) => u.Code == input.Code)
+            .WhereIF(input.Status.HasValue, (u, a) => a.Status == (StatusEnum)input.Status.Value)
+            .OrderBy((u, a) => new { a.OrderNo, a.Code })
+            .Select((u, a) => a).ToListAsync();
     }
 
     /// <summary>
@@ -178,7 +181,7 @@ public class SysDictDataService : IDynamicApiController, ITransient
     /// </summary>
     /// <param name="dictTypeId"></param>
     /// <returns></returns>
-    [ApiDescriptionSettings(false)]
+    [NonAction]
     public async Task DeleteDictData(long dictTypeId)
     {
         await _sysDictDataRep.DeleteAsync(u => u.DictTypeId == dictTypeId);

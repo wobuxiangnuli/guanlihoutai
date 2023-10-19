@@ -93,7 +93,7 @@ public class SysTenantService : IDynamicApiController, ITransient
     /// 获取库隔离的租户列表
     /// </summary>
     /// <returns></returns>
-    [ApiDescriptionSettings(false)]
+    [NonAction]
     public async Task<List<SysTenant>> GetTenantDbList()
     {
         return await _sysTenantRep.GetListAsync(u => u.TenantType == TenantTypeEnum.Db && u.Status == StatusEnum.Enable);
@@ -138,7 +138,7 @@ public class SysTenantService : IDynamicApiController, ITransient
     public async Task<int> SetStatus(TenantInput input)
     {
         var tenant = await _sysTenantRep.GetFirstAsync(u => u.Id == input.Id);
-        if (tenant == null || tenant.ConfigId == SqlSugarConst.ConfigId)
+        if (tenant == null || tenant.ConfigId == SqlSugarConst.MainConfigId)
             throw Oops.Oh(ErrorCodeEnum.Z1001);
 
         if (!Enum.IsDefined(typeof(StatusEnum), input.Status))
@@ -199,7 +199,7 @@ public class SysTenantService : IDynamicApiController, ITransient
             NickName = "租管",
             Email = tenant.Email,
             Phone = tenant.Phone,
-            AccountType = AccountTypeEnum.Admin,
+            AccountType = AccountTypeEnum.SysAdmin,
             OrgId = newOrg.Id,
             PosId = newPos.Id,
             Birthday = DateTime.Parse("1986-06-28"),
@@ -241,7 +241,7 @@ public class SysTenantService : IDynamicApiController, ITransient
     public async Task DeleteTenant(DeleteTenantInput input)
     {
         // 禁止删除默认租户
-        if (input.Id.ToString() == SqlSugarConst.ConfigId)
+        if (input.Id.ToString() == SqlSugarConst.MainConfigId)
             throw Oops.Oh(ErrorCodeEnum.D1023);
 
         await _sysTenantRep.DeleteAsync(u => u.Id == input.Id);
@@ -287,10 +287,10 @@ public class SysTenantService : IDynamicApiController, ITransient
         await _sysTenantRep.AsUpdateable(input.Adapt<TenantOutput>()).IgnoreColumns(true).ExecuteCommandAsync();
 
         // 更新系统机构
-        await _sysOrgRep.UpdateSetColumnsTrueAsync(u => new SysOrg() { Name = input.Name }, u => u.Id == input.OrgId);
+        await _sysOrgRep.UpdateAsync(u => new SysOrg() { Name = input.Name }, u => u.Id == input.OrgId);
 
         // 更新系统用户
-        await _sysUserRep.UpdateSetColumnsTrueAsync(u => new SysUser() { Account = input.AdminAccount, Phone = input.Phone, Email = input.Email }, u => u.Id == input.UserId);
+        await _sysUserRep.UpdateAsync(u => new SysUser() { Account = input.AdminAccount, Phone = input.Phone, Email = input.Email }, u => u.Id == input.UserId);
 
         await UpdateTenantCache();
     }
@@ -303,7 +303,7 @@ public class SysTenantService : IDynamicApiController, ITransient
     [DisplayName("授权租户管理员角色菜单")]
     public async Task GrantMenu(RoleMenuInput input)
     {
-        var tenantAdminUser = await _sysUserRep.GetFirstAsync(u => u.TenantId == input.Id && u.AccountType == AccountTypeEnum.Admin);
+        var tenantAdminUser = await _sysUserRep.GetFirstAsync(u => u.TenantId == input.Id && u.AccountType == AccountTypeEnum.SysAdmin);
         if (tenantAdminUser == null) return;
 
         var roleIds = await _sysUserRoleService.GetUserRoleIdList(tenantAdminUser.Id);
@@ -333,7 +333,7 @@ public class SysTenantService : IDynamicApiController, ITransient
     {
         var password = await _sysConfigService.GetConfigValue<string>(CommonConst.SysPassword);
         var encryptPassword = CryptogramUtil.Encrypt(password);
-        await _sysUserRep.UpdateSetColumnsTrueAsync(u => new SysUser() { Password = encryptPassword }, u => u.Id == input.UserId);
+        await _sysUserRep.UpdateAsync(u => new SysUser() { Password = encryptPassword }, u => u.Id == input.UserId);
         return password;
     }
 
@@ -341,18 +341,18 @@ public class SysTenantService : IDynamicApiController, ITransient
     /// 缓存所有租户
     /// </summary>
     /// <returns></returns>
-    [ApiDescriptionSettings(false)]
+    [NonAction]
     public async Task UpdateTenantCache()
     {
         _sysCacheService.Remove(CacheConst.KeyTenant);
 
         var iTenant = _sysTenantRep.AsTenant();
         var tenantList = await _sysTenantRep.GetListAsync();
-        var defaultTenant = tenantList.FirstOrDefault(u => u.Id.ToString() == SqlSugarConst.ConfigId);
+        var defaultTenant = tenantList.FirstOrDefault(u => u.Id.ToString() == SqlSugarConst.MainConfigId);
         foreach (var tenant in tenantList)
         {
             var tenantId = tenant.Id.ToString();
-            if (tenantId == SqlSugarConst.ConfigId) continue;
+            if (tenantId == SqlSugarConst.MainConfigId) continue;
 
             // Id模式隔离的租户数据库与宿主一致
             if (tenant.TenantType == TenantTypeEnum.Id)
@@ -385,16 +385,19 @@ public class SysTenantService : IDynamicApiController, ITransient
             throw Oops.Oh(ErrorCodeEnum.Z1002);
 
         // 默认数据库配置
-        var defautConfig = App.GetOptions<DbConnectionOptions>().ConnectionConfigs.FirstOrDefault();
+        var defaultConfig = App.GetOptions<DbConnectionOptions>().ConnectionConfigs.FirstOrDefault();
 
         var config = new DbConnectionConfig
         {
             ConfigId = tenant.Id.ToString(),
             DbType = tenant.DbType,
             ConnectionString = tenant.Connection,
-            EnableInitDb = true,
-            EnableDiffLog = false,
-            EnableUnderLine = defautConfig.EnableUnderLine,
+            DbSettings = new DbSettings()
+            {
+                EnableInitDb = true,
+                EnableDiffLog = false,
+                EnableUnderLine = defaultConfig.DbSettings.EnableUnderLine,
+            }
         };
         SqlSugarSetup.InitTenantDatabase(App.GetRequiredService<ISqlSugarClient>().AsTenant(), config);
     }

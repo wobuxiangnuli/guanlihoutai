@@ -46,7 +46,7 @@
 					<el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12" class="mb20">
 						<el-form-item label="生成表" prop="tableName" :rules="[{ required: true, message: '生成表不能为空', trigger: 'blur' }]">
 							<el-select v-model="state.ruleForm.tableName" filterable clearable class="w100">
-								<el-option v-for="item in state.tableData" :key="item.entityName" :label="item.tableName" :value="item.entityName" />
+								<el-option v-for="item in state.tableData" :key="item.entityName" :label="item.entityName + ' ( ' + item.tableName + ' )'" :value="item.entityName" />
 							</el-select>
 						</el-form-item>
 					</el-col>
@@ -73,8 +73,11 @@
 						</el-form-item>
 					</el-col>
 					<el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12" class="mb20">
-						<el-form-item label="命名空间" prop="nameSpace">
-							<el-input v-model="state.ruleForm.nameSpace" clearable placeholder="请输入" />
+						<el-form-item label="命名空间" prop="nameSpace" :rules="[{ required: true, message: '请选择命名空间', trigger: 'blur' }]">
+							<!-- <el-input v-model="state.ruleForm.nameSpace" clearable placeholder="请输入" /> -->
+							<el-select v-model="state.ruleForm.nameSpace" filterable clearable class="w100" placeholder="命名空间">
+								<el-option v-for="(item,index) in props.applicationNamespaces" :key="index" :label="item" :value="item" />
+							</el-select>
 						</el-form-item>
 					</el-col>
 					<el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12" class="mb20">
@@ -110,6 +113,7 @@ import { UpdateCodeGenInput, AddCodeGenInput, SysMenu } from '/@/api-services/mo
 
 const props = defineProps({
 	title: String,
+	applicationNamespaces: Array<String>,
 });
 const emits = defineEmits(['handleQuery']);
 const ruleFormRef = ref();
@@ -148,6 +152,7 @@ const dbChanged = async () => {
 const openDialog = (row: any) => {
 	state.ruleForm = JSON.parse(JSON.stringify(row));
 	state.isShowDialog = true;
+	ruleFormRef.value?.resetFields();
 };
 
 // 关闭弹窗
@@ -172,19 +177,6 @@ const submit = () => {
 		}
 		closeDialog();
 	});
-};
-
-const isOrNotSelect = () => {
-	return [
-		{
-			label: '是',
-			value: 1,
-		},
-		{
-			label: '否',
-			value: 0,
-		},
-	];
 };
 
 // 导出对象

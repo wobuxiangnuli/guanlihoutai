@@ -29,7 +29,7 @@
 				<el-card shadow="hover" header="缓存数据" v-loading="state.loading1" class="mt8">
 					<template #header>
 						<div class="card-header">
-							<span>{{ `缓存数据${state.cacheKey ? ` - ${state.cacheKey}` : ''}` }}</span>
+							<span>{{ `缓存数据${state.cacheKey ? `【${state.cacheKey}】` : ''}` }}</span>
 							<el-button icon="ele-Delete" size="small" type="danger" @click="delCache" v-auth="'sysCache:delete'"> 删除缓存 </el-button>
 						</div>
 					</template>
@@ -56,7 +56,7 @@ const state = reactive({
 	loading: false,
 	loading1: false,
 	cacheData: [] as any,
-	cacheValue: undefined,
+	cacheValue: undefined as any,
 	cacheKey: undefined,
 });
 
@@ -124,7 +124,23 @@ const nodeClick = async (node: any) => {
 	currentNode.value = node;
 	state.loading1 = true;
 	var res = await getAPI(SysCacheApi).apiSysCacheValueKeyGet(node.id);
-	state.cacheValue = res.data.result;
+	// state.cacheValue = JSON.parse(res.data.result);
+	var result = res.data.result;
+	if (typeof result == 'string') {
+		try {
+			var obj = JSON.parse(result);
+			if (typeof obj == 'object') {
+				state.cacheValue = obj;
+			} else {
+				state.cacheValue = result;
+			}
+		} catch (e) {
+			state.cacheValue = result;
+		}
+	} else {
+		state.cacheValue = result;
+	}
+
 	state.cacheKey = node.id;
 	state.loading1 = false;
 };

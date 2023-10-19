@@ -28,9 +28,9 @@
 					</el-col>
 					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
 						<el-form-item label="存放位置" prop="position">
-							<el-select v-model="state.ruleForm.position" clearable class="w100">
-								<el-option label="Admin.NET.Application" value="Admin.NET.Application" />
-								<el-option label="Admin.NET.Core" value="Admin.NET.Core" />
+							<!-- <el-input v-model="state.ruleForm.position" placeholder="存放位置" clearable>Admin.NET.Application</el-input> -->
+							<el-select v-model="state.ruleForm.position" filterable clearable class="w100" placeholder="存放位置">
+								<el-option v-for="(item,index) in props.applicationNamespaces" :key="index" :label="item" :value="item" />
 							</el-select>
 						</el-form-item>
 					</el-col>
@@ -60,6 +60,10 @@ const state = reactive({
 	codeGenBaseClassName: [] as any,
 });
 
+const props = defineProps({
+	applicationNamespaces: { type: Array },
+});
+
 onMounted(async () => {
 	let resDicData = await getAPI(SysDictTypeApi).apiSysDictTypeDataListGet('code_gen_base_class');
 	state.codeGenBaseClassName = resDicData.data.result;
@@ -69,8 +73,7 @@ onMounted(async () => {
 const openDialog = (row: any) => {
 	state.ruleForm.configId = row.configId;
 	state.ruleForm.tableName = row.tableName;
-	state.ruleForm.baseClassName = 'EntityBase';
-	state.ruleForm.position = 'Admin.NET.Application';
+	state.ruleForm.baseClassName = 'EntityBase';	
 	state.isShowDialog = true;
 };
 

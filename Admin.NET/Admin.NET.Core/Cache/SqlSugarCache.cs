@@ -14,45 +14,46 @@ namespace Admin.NET.Core;
 /// </summary>
 public class SqlSugarCache : ICacheService
 {
-    private static readonly ICache _cache = App.GetService(typeof(ICache)) as ICache;
+    /// <summary>
+    /// 系统缓存服务
+    /// </summary>
+    private static readonly SysCacheService _cache = App.GetService<SysCacheService>();
 
     public void Add<V>(string key, V value)
     {
-        _cache.Set(key, value);
+        _cache.Set($"{CacheConst.SqlSugar}{key}", value);
     }
 
     public void Add<V>(string key, V value, int cacheDurationInSeconds)
     {
-        _cache.Set(key, value, cacheDurationInSeconds);
+        _cache.Set($"{CacheConst.SqlSugar}{key}", value, TimeSpan.FromSeconds(cacheDurationInSeconds));
     }
 
     public bool ContainsKey<V>(string key)
     {
-        return _cache.ContainsKey(key);
+        return _cache.ExistKey($"{CacheConst.SqlSugar}{key}");
     }
 
     public V Get<V>(string key)
     {
-        return _cache.Get<V>(key);
+        return _cache.Get<V>($"{CacheConst.SqlSugar}{key}");
     }
 
     public IEnumerable<string> GetAllKey<V>()
     {
-        return _cache.Keys;
+        return _cache.GetKeysByPrefixKey(CacheConst.SqlSugar);
     }
 
-    public V GetOrCreate<V>(string cacheKey, Func<V> create, int cacheDurationInSeconds = int.MaxValue)
+    public V GetOrCreate<V>(string key, Func<V> create, int cacheDurationInSeconds = int.MaxValue)
     {
-        if (!_cache.TryGetValue<V>(cacheKey, out V value))
+        return _cache.GetOrAdd<V>($"{CacheConst.SqlSugar}{key}", (cacheKey) =>
         {
-            value = create();
-            _cache.Set(cacheKey, value, cacheDurationInSeconds);
-        }
-        return value;
+            return create();
+        }, cacheDurationInSeconds);
     }
 
     public void Remove<V>(string key)
     {
-        _cache.Remove(key);
+        _cache.Remove($"{CacheConst.SqlSugar}{key}");
     }
 }

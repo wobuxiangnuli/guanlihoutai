@@ -26,6 +26,7 @@ public static class ProjectOptions
         services.AddConfigurableOptions<DbConnectionOptions>();
         services.AddConfigurableOptions<SnowIdOptions>();
         services.AddConfigurableOptions<CacheOptions>();
+        services.AddConfigurableOptions<ClusterOptions>();
         services.AddConfigurableOptions<OSSProviderOptions>();
         services.AddConfigurableOptions<UploadOptions>();
         services.AddConfigurableOptions<WechatOptions>();
@@ -37,6 +38,7 @@ public static class ProjectOptions
         services.AddConfigurableOptions<EmailOptions>();
         services.AddConfigurableOptions<OAuthOptions>();
         services.AddConfigurableOptions<CryptogramOptions>();
+        services.AddConfigurableOptions<SMSOptions>();
         //services.AddConfigurableOptions<IpRateLimitingOptions>();
         //services.AddConfigurableOptions<IpRateLimitPoliciesOptions>();
         //services.AddConfigurableOptions<ClientRateLimitingOptions>();

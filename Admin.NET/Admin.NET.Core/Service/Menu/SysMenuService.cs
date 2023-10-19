@@ -45,7 +45,7 @@ public class SysMenuService : IDynamicApiController, ITransient
         {
             var menuList = await _sysMenuRep.AsQueryable()
                 .Where(u => u.Type != MenuTypeEnum.Btn && u.Status == StatusEnum.Enable)
-                .OrderBy(u => u.OrderNo).ToTreeAsync(u => u.Children, u => u.Pid, 0);
+                .OrderBy(u => new { u.OrderNo, u.Id }).ToTreeAsync(u => u.Children, u => u.Pid, 0);
             return menuList.Adapt<List<MenuOutput>>();
         }
         else
@@ -53,7 +53,7 @@ public class SysMenuService : IDynamicApiController, ITransient
             var menuIdList = await GetMenuIdList();
             var menuTree = await _sysMenuRep.AsQueryable()
                 .Where(u => u.Status == StatusEnum.Enable)
-                .OrderBy(u => u.OrderNo).ToTreeAsync(u => u.Children, u => u.Pid, 0, menuIdList.Select(d => (object)d).ToArray());
+                .OrderBy(u => new { u.OrderNo, u.Id }).ToTreeAsync(u => u.Children, u => u.Pid, 0, menuIdList.Select(d => (object)d).ToArray());
             DeleteBtnFromMenuTree(menuTree);
             return menuTree.Adapt<List<MenuOutput>>();
         }
@@ -136,6 +136,9 @@ public class SysMenuService : IDynamicApiController, ITransient
     [DisplayName("更新菜单")]
     public async Task UpdateMenu(UpdateMenuInput input)
     {
+        if (input.Id == input.Pid)
+            throw Oops.Oh(ErrorCodeEnum.D4008);
+
         var isExist = input.Type != MenuTypeEnum.Btn
             ? await _sysMenuRep.IsAnyAsync(u => u.Title == input.Title && u.Type == input.Type && u.Id != input.Id)
             : await _sysMenuRep.IsAnyAsync(u => u.Permission == input.Permission && u.Type == input.Type && u.Id != input.Id);
@@ -213,7 +216,7 @@ public class SysMenuService : IDynamicApiController, ITransient
     public async Task<List<string>> GetOwnBtnPermList()
     {
         var userId = _userManager.UserId;
-        var permissions = _sysCacheService.Get<List<string>>(CacheConst.KeyPermission + userId);
+        var permissions = _sysCacheService.Get<List<string>>(CacheConst.KeyUserButton + userId);
         if (permissions == null || permissions.Count == 0)
         {
             var menuIdList = _userManager.SuperAdmin ? new List<long>() : await GetMenuIdList();
@@ -221,7 +224,7 @@ public class SysMenuService : IDynamicApiController, ITransient
                 .Where(u => u.Type == MenuTypeEnum.Btn)
                 .WhereIF(menuIdList.Count > 0, u => menuIdList.Contains(u.Id))
                 .Select(u => u.Permission).ToListAsync();
-            _sysCacheService.Set(CacheConst.KeyPermission + userId, permissions);
+            _sysCacheService.Set(CacheConst.KeyUserButton + userId, permissions);
         }
         return permissions;
     }
@@ -230,16 +233,16 @@ public class SysMenuService : IDynamicApiController, ITransient
     /// 获取系统所有按钮权限集合（缓存）
     /// </summary>
     /// <returns></returns>
-    [ApiDescriptionSettings(false)]
+    [NonAction]
     public async Task<List<string>> GetAllBtnPermList()
     {
-        var permissions = _sysCacheService.Get<List<string>>(CacheConst.KeyPermission + 0);
+        var permissions = _sysCacheService.Get<List<string>>(CacheConst.KeyUserButton + 0);
         if (permissions == null || permissions.Count == 0)
         {
             permissions = await _sysMenuRep.AsQueryable()
                 .Where(u => u.Type == MenuTypeEnum.Btn)
                 .Select(u => u.Permission).ToListAsync();
-            _sysCacheService.Set(CacheConst.KeyPermission + 0, permissions);
+            _sysCacheService.Set(CacheConst.KeyUserButton + 0, permissions);
         }
         return permissions;
     }
@@ -249,8 +252,8 @@ public class SysMenuService : IDynamicApiController, ITransient
     /// </summary>
     private void DeleteMenuCache()
     {
-        _sysCacheService.RemoveByPrefixKey(CacheConst.KeyMenu);
-        _sysCacheService.RemoveByPrefixKey(CacheConst.KeyPermission);
+        _sysCacheService.RemoveByPrefixKey(CacheConst.KeyUserMenu);
+        _sysCacheService.RemoveByPrefixKey(CacheConst.KeyUserButton);
     }
 
     /// <summary>

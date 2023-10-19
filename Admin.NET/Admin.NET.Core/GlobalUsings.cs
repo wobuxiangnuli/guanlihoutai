@@ -9,6 +9,7 @@
 
 global using Admin.NET.Core.Service;
 global using Furion;
+global using Furion.ClayObject;
 global using Furion.ConfigurableOptions;
 global using Furion.DatabaseAccessor;
 global using Furion.DataEncryption;
@@ -24,6 +25,7 @@ global using Furion.Schedule;
 global using Furion.UnifyResult;
 global using Furion.ViewEngine;
 global using Magicodes.ExporterAndImporter.Core;
+global using Magicodes.ExporterAndImporter.Core.Extension;
 global using Magicodes.ExporterAndImporter.Excel;
 global using Mapster;
 global using Microsoft.AspNetCore.Authorization;
@@ -34,6 +36,7 @@ global using Microsoft.Extensions.Configuration;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Logging;
 global using Microsoft.Extensions.Options;
+global using NewLife;
 global using NewLife.Caching;
 global using Newtonsoft.Json;
 global using SKIT.FlurlHttpClient;

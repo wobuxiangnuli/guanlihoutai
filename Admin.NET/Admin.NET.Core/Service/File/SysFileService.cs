@@ -1,4 +1,4 @@
-// 麻省理工学院许可证
+﻿// 麻省理工学院许可证
 //
 // 版权所有 (c) 2021-2023 zuohuaijun，大名科技（天津）有限公司  联系电话/微信：18020030720  QQ：515096995
 //
@@ -7,6 +7,7 @@
 // 软件按“原样”提供，不提供任何形式的明示或暗示的保证，包括但不限于对适销性、适用性和非侵权的保证。
 // 在任何情况下，作者或版权持有人均不对任何索赔、损害或其他责任负责，无论是因合同、侵权或其他方式引起的，与软件或其使用或其他交易有关。
 
+using Aliyun.OSS.Util;
 using Furion.VirtualFileServer;
 using OnceMi.AspNetCore.OSS;
 
@@ -67,7 +68,7 @@ public class SysFileService : IDynamicApiController, ITransient
         return new FileOutput
         {
             Id = sysFile.Id,
-            Url = sysFile.Url,  // string.IsNullOrWhiteSpace(sysFile.Url) ? _commonService.GetFileUrl(sysFile) : sysFile.Url,
+            Url = sysFile.Url, // string.IsNullOrWhiteSpace(sysFile.Url) ? _commonService.GetFileUrl(sysFile) : sysFile.Url,
             SizeKb = sysFile.SizeKb,
             Suffix = sysFile.Suffix,
             FilePath = sysFile.FilePath,
@@ -163,6 +164,17 @@ public class SysFileService : IDynamicApiController, ITransient
     {
         if (file == null) throw Oops.Oh(ErrorCodeEnum.D8000);
 
+        // 判断是否重复上传的文件
+        var sizeKb = (long)(file.Length / 1024.0); // 大小KB
+        var fileMd5 = string.Empty;
+        if (_uploadOptions.EnableMd5)
+        {
+            using var fileStream = file.OpenReadStream();
+            fileMd5 = OssUtils.ComputeContentMd5(fileStream, fileStream.Length);
+            var sysFile = await _sysFileRep.GetFirstAsync(q => q.FileMd5 == fileMd5 && (q.SizeKb == null || q.SizeKb == sizeKb.ToString()));
+            if (sysFile != null) return sysFile;
+        }
+
         var path = savePath;
         if (string.IsNullOrWhiteSpace(savePath))
         {
@@ -179,7 +191,6 @@ public class SysFileService : IDynamicApiController, ITransient
         if (!_uploadOptions.ContentType.Contains(file.ContentType))
             throw Oops.Oh(ErrorCodeEnum.D8001);
 
-        var sizeKb = (long)(file.Length / 1024.0); // 大小KB
         if (sizeKb > _uploadOptions.MaxSize)
             throw Oops.Oh(ErrorCodeEnum.D8002);
 
@@ -206,6 +217,7 @@ public class SysFileService : IDynamicApiController, ITransient
             Suffix = suffix,
             SizeKb = sizeKb.ToString(),
             FilePath = path,
+            FileMd5 = fileMd5,
         };
 
         var finalName = newFile.Id + suffix; // 文件最终名称
@@ -224,7 +236,9 @@ public class SysFileService : IDynamicApiController, ITransient
 
                 case OSSProvider.Minio:
                     // 获取Minio文件的下载或者预览地址
-                    newFile.Url = await GetMinioPreviewFileUrl(newFile.BucketName, filePath); ;
+                    //newFile.Url = await GetMinioPreviewFileUrl(newFile.BucketName, filePath);// 这种方法生成的Url是有7天有效期的，不能这样使用
+                    // 需要在MinIO中的Buckets开通对Anonymous 的readonly权限
+                    newFile.Url = $"{(_OSSProviderOptions.IsEnableHttps ? "https" : "http")}://{_OSSProviderOptions.Endpoint}/{newFile.BucketName}/{filePath}";
                     break;
             }
         }
@@ -259,16 +273,16 @@ public class SysFileService : IDynamicApiController, ITransient
         return newFile;
     }
 
-    /// <summary>
-    /// 获取Minio文件的下载或者预览地址
-    /// </summary>
-    /// <param name="bucketName">桶名</param>
-    /// <param name="fileName">文件名</param>
-    /// <returns></returns>
-    private async Task<string> GetMinioPreviewFileUrl(string bucketName, string fileName)
-    {
-        return await _OSSService.PresignedGetObjectAsync(bucketName, fileName, 7);
-    }
+    ///// <summary>
+    ///// 获取Minio文件的下载或者预览地址
+    ///// </summary>
+    ///// <param name="bucketName">桶名</param>
+    ///// <param name="fileName">文件名</param>
+    ///// <returns></returns>
+    //private async Task<string> GetMinioPreviewFileUrl(string bucketName, string fileName)
+    //{
+    //    return await _OSSService.PresignedGetObjectAsync(bucketName, fileName, 7);
+    //}
 
     /// <summary>
     /// 上传头像

@@ -13,7 +13,7 @@ namespace Admin.NET.Core;
 /// 系统微信支付表
 /// </summary>
 [SugarTable(null, "系统微信支付表")]
-[SystemTable]
+[SysTable]
 public class SysWechatPay : EntityBase
 {
     /// <summary>
@@ -143,7 +143,6 @@ public class SysWechatPay : EntityBase
     /// <summary>
     /// 关联微信用户
     /// </summary>
-    [SugarColumn(IsIgnore = true)]
     [Navigate(NavigateType.OneToOne, nameof(OpenId))]
     public SysWechatUser SysWechatUser { get; set; }
 

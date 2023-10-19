@@ -13,7 +13,7 @@ namespace Admin.NET.Core;
 /// 系统通知公告用户表
 /// </summary>
 [SugarTable(null, "系统通知公告用户表")]
-[SystemTable]
+[SysTable]
 public class SysNoticeUser
 {
     /// <summary>
@@ -25,7 +25,6 @@ public class SysNoticeUser
     /// <summary>
     /// 通知公告
     /// </summary>
-    [SugarColumn(IsIgnore = true)]
     [Navigate(NavigateType.OneToOne, nameof(NoticeId))]
     public SysNotice SysNotice { get; set; }
 

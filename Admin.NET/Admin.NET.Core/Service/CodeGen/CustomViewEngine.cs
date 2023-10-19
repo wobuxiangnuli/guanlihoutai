@@ -1,4 +1,4 @@
-// 麻省理工学院许可证
+﻿// 麻省理工学院许可证
 //
 // 版权所有 (c) 2021-2023 zuohuaijun，大名科技（天津）有限公司  联系电话/微信：18020030720  QQ：515096995
 //
@@ -25,7 +25,7 @@ public class CustomViewEngine : ViewEngineModel
     /// <summary>
     /// 库定位器
     /// </summary>
-    public string ConfigId { get; set; } = SqlSugarConst.ConfigId;
+    public string ConfigId { get; set; } = SqlSugarConst.MainConfigId;
 
     public string AuthorName { get; set; }
 
@@ -57,19 +57,30 @@ public class CustomViewEngine : ViewEngineModel
 
     public string GetColumnNetType(object tbName, object colName)
     {
+        var config = App.GetOptions<DbConnectionOptions>().ConnectionConfigs.FirstOrDefault(u => u.ConfigId == ConfigId);
         ColumnList = GetColumnListByTableName(tbName.ToString());
-        var col = ColumnList.Where(c => c.ColumnName == colName.ToString()).FirstOrDefault();
+        var col = ColumnList.Where(c => (config.DbSettings.EnableUnderLine
+            ? CodeGenUtil.CamelColumnName(c.ColumnName, Array.Empty<string>())
+            : c.ColumnName) == colName.ToString()).FirstOrDefault();
         return col.NetType;
     }
 
     public List<ColumnOuput> GetColumnListByTableName(string tableName)
     {
         // 多库代码生成切换库
-        var provider = _db.AsTenant().GetConnectionScope(ConfigId != SqlSugarConst.ConfigId ? ConfigId : SqlSugarConst.ConfigId);
+        var provider = _db.AsTenant().GetConnectionScope(ConfigId != SqlSugarConst.MainConfigId ? ConfigId : SqlSugarConst.MainConfigId);
 
         // 获取实体类型属性
         var entityType = provider.DbMaintenance.GetTableInfoList().FirstOrDefault(u => u.Name == tableName);
-        if (entityType == null) return null;
+
+        // 因为ConfigId的表通常也会用到主库的表来做连接，所以这里如果在ConfigId中找不到实体也尝试一下在主库中查找
+        if (ConfigId == SqlSugarConst.MainConfigId && entityType == null) return null;
+        if (ConfigId != SqlSugarConst.MainConfigId)
+        {
+            provider = _db.AsTenant().GetConnectionScope(SqlSugarConst.MainConfigId);
+            entityType = provider.DbMaintenance.GetTableInfoList().FirstOrDefault(u => u.Name == tableName);
+            if (entityType == null) return null;
+        }
 
         // 按原始类型的顺序获取所有实体类型属性（不包含导航属性，会返回null）
         return provider.DbMaintenance.GetColumnInfosByTableName(entityType.Name).Select(u => new ColumnOuput

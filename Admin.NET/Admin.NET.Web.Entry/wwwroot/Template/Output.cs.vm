@@ -1,28 +1,35 @@
-namespace @Model.NameSpace;
+﻿namespace @Model.NameSpace;
 
-    /// <summary>
-    /// @(@Model.BusName)输出参数
-    /// </summary>
-    public class @(@Model.ClassName)Output
-    {
+/// <summary>
+/// @(@Model.BusName)输出参数
+/// </summary>
+public class @(@Model.ClassName)Output
+{
 @foreach (var column in Model.TableField){
-       @:/// <summary>
-       @:/// @column.ColumnComment
-       @:/// </summary>
+    @:/// <summary>
+    @:/// @column.ColumnComment
+    @:/// </summary>
 if(column.EffectType == "fk")
 {
-       @:public @column.NetType @column.ColumnName { get; set; } 
-       @:
-       @:/// <summary>
-       @:/// @column.ColumnComment
-       @:/// </summary>
-       @:public @(@column.FkColumnNetType) @(@column.FkEntityName)@(@column.FkColumnName) { get; set; } 
+    @:public @column.NetType @column.PropertyName { get; set; } 
+    @:
+    @:/// <summary>
+    @:/// @(column.ColumnComment) 描述
+    @:/// </summary>
+    @:public @(@column.FkColumnNetType) @(@column.PropertyName)@(@column.FkColumnName) { get; set; } 
 
 }else if(column.EffectType == "Upload"){
-        @:public @column.NetType @column.ColumnName { get; set; }
-        @:public SysFile @(@column.ColumnName)Attachment { get; set; }
+    @:public @column.NetType @column.PropertyName { get; set; }
+    @:public SysFile @(@column.PropertyName)Attachment { get; set; }
+}else if(column.EffectType == "ApiTreeSelect"){
+    @:public @column.NetType @column.PropertyName { get; set; } 
+    @:
+    @:/// <summary>
+    @:/// @(column.ColumnComment) 描述 
+    @:/// </summary>
+    @:public string? @(@column.PropertyName)@(@column.DisplayColumn) { get; set; } 
 }else{
-       @:public @column.NetType @column.ColumnName { get; set; }
+    @:public @column.NetType @(@column.PropertyName) { get; set; }
 }
     @:
 }
@@ -31,6 +38,8 @@ if(column.EffectType == "fk")
 
 @foreach (var column in Model.TableField){
 if (@column.EffectType == "ApiTreeSelect"){
+    @:// 使用实际实体@(@column.FkTableName),所以这里就删了
+    @:/*
     @:[SugarTable("@(@column.FkTableName)")]
     @:public class @(@column.FkEntityName)TreeOutput: EntityBaseId
     @:{
@@ -44,5 +53,6 @@ if (@column.EffectType == "ApiTreeSelect"){
         @:[SugarColumn(IsIgnore = true)]
         @:public List<@(@column.FkEntityName)TreeOutput> Children { get; set; }
     @:}
+    @:*/
 }
 }

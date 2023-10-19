@@ -13,7 +13,7 @@ namespace Admin.NET.Core;
 /// 系统文件表
 /// </summary>
 [SugarTable(null, "系统文件表")]
-[SystemTable]
+[SysTable]
 public class SysFile : EntityBase
 {
     /// <summary>
@@ -31,8 +31,8 @@ public class SysFile : EntityBase
     public string? BucketName { get; set; }
 
     /// <summary>
-    /// 文件名称（上传时名称）
-    /// </summary>文件名称
+    /// 文件名称（源文件名）
+    /// </summary>
     [SugarColumn(ColumnDescription = "文件名称", Length = 128)]
     [MaxLength(128)]
     public string? FileName { get; set; }
@@ -68,7 +68,14 @@ public class SysFile : EntityBase
     /// <summary>
     /// 外链地址-OSS上传后生成外链地址方便前端预览
     /// </summary>
-    [SugarColumn(ColumnDescription = "外链地址", Length = 128)]
-    [MaxLength(128)]
+    [SugarColumn(ColumnDescription = "外链地址", Length = 512)]
+    [MaxLength(512)]
     public string? Url { get; set; }
+
+    /// <summary>
+    /// 文件MD5
+    /// </summary>
+    [SugarColumn(ColumnDescription = "文件MD5", Length = 128)]
+    [MaxLength(128)]
+    public string? FileMd5 { get; set; }
 }

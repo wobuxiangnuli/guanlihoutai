@@ -1,4 +1,4 @@
-// 麻省理工学院许可证
+﻿// 麻省理工学院许可证
 //
 // 版权所有 (c) 2021-2023 zuohuaijun，大名科技（天津）有限公司  联系电话/微信：18020030720  QQ：515096995
 //
@@ -30,14 +30,14 @@ public class SysCodeGenConfigService : IDynamicApiController, ITransient
     [DisplayName("获取代码生成配置列表")]
     public async Task<List<CodeGenConfig>> GetList([FromQuery] CodeGenConfig input)
     {
-        var whetherCommon = YesNoEnum.Y.ToString();
         return await _db.Queryable<SysCodeGenConfig>()
-            .Where(u => u.CodeGenId == input.CodeGenId && u.WhetherCommon != whetherCommon)
+            .Where(u => u.CodeGenId == input.CodeGenId && u.WhetherCommon != YesNoEnum.Y.ToString())
             .Select<CodeGenConfig>()
             .Mapper(u =>
             {
-                u.NetType = (u.EffectType == "EnumSelector" ? u.DictTypeCode : u.NetType);
+                u.NetType = (u.EffectType == "EnumSelector" || u.EffectType == "ConstSelector" ? u.DictTypeCode : u.NetType);
             })
+            .OrderBy(u => u.OrderNo)
             .ToListAsync();
     }
 
@@ -51,7 +51,9 @@ public class SysCodeGenConfigService : IDynamicApiController, ITransient
     public async Task UpdateCodeGenConfig(List<CodeGenConfig> inputList)
     {
         if (inputList == null || inputList.Count < 1) return;
-        await _db.Updateable(inputList.Adapt<List<SysCodeGenConfig>>()).ExecuteCommandAsync();
+        await _db.Updateable(inputList.Adapt<List<SysCodeGenConfig>>())
+            .IgnoreColumns(u => new { u.ColumnLength, u.ColumnName, u.PropertyName })
+            .ExecuteCommandAsync();
     }
 
     /// <summary>
@@ -59,7 +61,7 @@ public class SysCodeGenConfigService : IDynamicApiController, ITransient
     /// </summary>
     /// <param name="codeGenId"></param>
     /// <returns></returns>
-    [ApiDescriptionSettings(false)]
+    [NonAction]
     public async Task DeleteCodeGenConfig(long codeGenId)
     {
         await _db.Deleteable<SysCodeGenConfig>().Where(u => u.CodeGenId == codeGenId).ExecuteCommandAsync();
@@ -79,16 +81,16 @@ public class SysCodeGenConfigService : IDynamicApiController, ITransient
     /// <summary>
     /// 批量增加代码生成配置
     /// </summary>
-    /// <param name="tableColumnOuputList"></param>
+    /// <param name="tableColumnOutputList"></param>
     /// <param name="codeGenerate"></param>
-    [ApiDescriptionSettings(false)]
-    public void AddList(List<ColumnOuput> tableColumnOuputList, SysCodeGen codeGenerate)
+    [NonAction]
+    public void AddList(List<ColumnOuput> tableColumnOutputList, SysCodeGen codeGenerate)
     {
-        if (tableColumnOuputList == null) return;
+        if (tableColumnOutputList == null) return;
 
         var codeGenConfigs = new List<SysCodeGenConfig>();
-
-        foreach (var tableColumn in tableColumnOuputList)
+        var orderNo = 100;
+        foreach (var tableColumn in tableColumnOutputList)
         {
             var codeGenConfig = new SysCodeGenConfig();
 
@@ -109,12 +111,15 @@ public class SysCodeGenConfigService : IDynamicApiController, ITransient
             }
 
             codeGenConfig.CodeGenId = codeGenerate.Id;
-            codeGenConfig.ColumnName = tableColumn.ColumnName;
+            codeGenConfig.ColumnName = tableColumn.ColumnName; // 字段名
+            codeGenConfig.PropertyName = tableColumn.PropertyName;// 实体属性名
+            codeGenConfig.ColumnLength = tableColumn.ColumnLength;// 长度
             codeGenConfig.ColumnComment = tableColumn.ColumnComment;
             codeGenConfig.NetType = tableColumn.DataType;
             codeGenConfig.WhetherRetract = YesNoEnum.N.ToString();
 
-            codeGenConfig.WhetherRequired = YesNoEnum.N.ToString();
+            // 生成代码时，主键并不是必要输入项，故一定要排除主键字段
+            codeGenConfig.WhetherRequired = (tableColumn.IsNullable || tableColumn.IsPrimarykey) ? YesNoEnum.N.ToString() : YesNoEnum.Y.ToString();
             codeGenConfig.QueryWhether = YesOrNo;
             codeGenConfig.WhetherAddUpdate = YesOrNo;
             codeGenConfig.WhetherTable = YesOrNo;
@@ -124,10 +129,13 @@ public class SysCodeGenConfigService : IDynamicApiController, ITransient
             codeGenConfig.DataType = tableColumn.DataType;
             codeGenConfig.EffectType = CodeGenUtil.DataTypeToEff(codeGenConfig.NetType);
             codeGenConfig.QueryType = GetDefaultQueryType(codeGenConfig); // QueryTypeEnum.eq.ToString();
+            codeGenConfig.OrderNo = orderNo;
             codeGenConfigs.Add(codeGenConfig);
+
+            orderNo += 10; // 每个配置排序间隔10
         }
         // 多库代码生成---这里要切回主库
-        var provider = _db.AsTenant().GetConnectionScope(SqlSugarConst.ConfigId);
+        var provider = _db.AsTenant().GetConnectionScope(SqlSugarConst.MainConfigId);
         provider.Insertable(codeGenConfigs).ExecuteCommand();
     }
 
@@ -138,16 +146,11 @@ public class SysCodeGenConfigService : IDynamicApiController, ITransient
     /// <returns></returns>
     private string GetDefaultQueryType(SysCodeGenConfig codeGenConfig)
     {
-        switch (codeGenConfig.NetType?.TrimEnd('?'))
+        return (codeGenConfig.NetType?.TrimEnd('?')) switch
         {
-            case "string":
-                return "like";
-
-            case "DateTime":
-                return "~";
-
-            default:
-                return "==";
-        }
+            "string" => "like",
+            "DateTime" => "~",
+            _ => "==",
+        };
     }
 }

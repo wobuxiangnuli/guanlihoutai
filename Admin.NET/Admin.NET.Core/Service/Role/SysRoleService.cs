@@ -49,7 +49,7 @@ public class SysRoleService : IDynamicApiController, ITransient
     public async Task<SqlSugarPagedList<SysRole>> Page(PageRoleInput input)
     {
         return await _sysRoleRep.AsQueryable()
-            //.WhereIF(!_userManager.SuperAdmin, u => u.CreateUserId == _userManager.UserId)
+            .WhereIF(!_userManager.SuperAdmin, u => u.CreateUserId == _userManager.UserId) // 若非超管，则只能操作自己创建的角色
             .WhereIF(!string.IsNullOrWhiteSpace(input.Name), u => u.Name.Contains(input.Name))
             .WhereIF(!string.IsNullOrWhiteSpace(input.Code), u => u.Code.Contains(input.Code))
             .OrderBy(u => u.OrderNo)
@@ -63,7 +63,12 @@ public class SysRoleService : IDynamicApiController, ITransient
     [DisplayName("获取角色列表")]
     public async Task<List<RoleOutput>> GetList()
     {
-        return await _sysRoleRep.AsQueryable().OrderBy(u => u.OrderNo).Select<RoleOutput>().ToListAsync();
+        // 当前用户已拥有的角色集合
+        var roleIdList = _userManager.SuperAdmin ? null : await _sysUserRoleService.GetUserRoleIdList(_userManager.UserId);
+
+        return await _sysRoleRep.AsQueryable()
+            .WhereIF(roleIdList != null, u => u.CreateUserId == _userManager.UserId || roleIdList.Contains(u.Id)) // 若非超管，则只显示自己创建和已拥有的角色
+            .OrderBy(u => u.OrderNo).Select<RoleOutput>().ToListAsync();
     }
 
     /// <summary>
@@ -75,8 +80,7 @@ public class SysRoleService : IDynamicApiController, ITransient
     [DisplayName("增加角色")]
     public async Task AddRole(AddRoleInput input)
     {
-        var isExist = await _sysRoleRep.IsAnyAsync(u => u.Name == input.Name && u.Code == input.Code);
-        if (isExist)
+        if (await _sysRoleRep.IsAnyAsync(u => u.Name == input.Name && u.Code == input.Code))
             throw Oops.Oh(ErrorCodeEnum.D1006);
 
         var newRole = await _sysRoleRep.AsInsertable(input.Adapt<SysRole>()).ExecuteReturnEntityAsync();
@@ -93,10 +97,14 @@ public class SysRoleService : IDynamicApiController, ITransient
     {
         if (input.MenuIdList == null || input.MenuIdList.Count < 1)
             return;
+
+        // 将父节点为0的菜单排除，防止前端全选异常
+        var pMenuIds = await _sysRoleRep.ChangeRepository<SqlSugarRepository<SysMenu>>().AsQueryable().Where(u => input.MenuIdList.Contains(u.Id) && u.Pid == 0).ToListAsync(u => u.Id);
+        var menuIds = input.MenuIdList.Except(pMenuIds); // 差集
         await GrantMenu(new RoleMenuInput()
         {
             Id = input.Id,
-            MenuIdList = input.MenuIdList
+            MenuIdList = menuIds.ToList()
         });
     }
 
@@ -109,8 +117,7 @@ public class SysRoleService : IDynamicApiController, ITransient
     [DisplayName("更新角色")]
     public async Task UpdateRole(UpdateRoleInput input)
     {
-        var isExist = await _sysRoleRep.IsAnyAsync(u => u.Name == input.Name && u.Code == input.Code && u.Id != input.Id);
-        if (isExist)
+        if (await _sysRoleRep.IsAnyAsync(u => u.Name == input.Name && u.Code == input.Code && u.Id != input.Id))
             throw Oops.Oh(ErrorCodeEnum.D1006);
 
         await _sysRoleRep.AsUpdateable(input.Adapt<SysRole>()).IgnoreColumns(true)
@@ -129,7 +136,7 @@ public class SysRoleService : IDynamicApiController, ITransient
     [DisplayName("删除角色")]
     public async Task DeleteRole(DeleteRoleInput input)
     {
-        var sysRole = await _sysRoleRep.GetFirstAsync(u => u.Id == input.Id);
+        var sysRole = await _sysRoleRep.GetFirstAsync(u => u.Id == input.Id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
         if (sysRole.Code == CommonConst.SysAdminRole)
             throw Oops.Oh(ErrorCodeEnum.D1019);
 
@@ -164,8 +171,12 @@ public class SysRoleService : IDynamicApiController, ITransient
     [DisplayName("授权角色数据范围")]
     public async Task GrantDataScope(RoleOrgInput input)
     {
-        // 删除所有用户机构缓存
-        _sysCacheService.RemoveByPrefixKey(CacheConst.KeyOrgIdList);
+        // 删除与该角色相关的用户机构缓存
+        var userIdList = await _sysUserRoleService.GetUserIdList(input.Id);
+        foreach (var userId in userIdList)
+        {
+            SqlSugarFilter.DeleteUserOrgCache(userId, _sysRoleRep.Context.CurrentConnectionConfig.ConfigId);
+        }
 
         var role = await _sysRoleRep.GetFirstAsync(u => u.Id == input.Id);
         var dataScope = input.DataScope;

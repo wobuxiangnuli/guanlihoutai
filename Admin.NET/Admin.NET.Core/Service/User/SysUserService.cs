@@ -1,4 +1,4 @@
-﻿// 麻省理工学院许可证
+// 麻省理工学院许可证
 //
 // 版权所有 (c) 2021-2023 zuohuaijun，大名科技（天津）有限公司  联系电话/微信：18020030720  QQ：515096995
 //
@@ -76,7 +76,7 @@ public class SysUserService : IDynamicApiController, ITransient
     [UnitOfWork]
     [ApiDescriptionSettings(Name = "Add"), HttpPost]
     [DisplayName("增加用户")]
-    public async Task AddUser(AddUserInput input)
+    public async Task<long> AddUser(AddUserInput input)
     {
         var isExist = await _sysUserRep.AsQueryable().Filter(null, true).AnyAsync(u => u.Account == input.Account);
         if (isExist) throw Oops.Oh(ErrorCodeEnum.D1003);
@@ -88,6 +88,30 @@ public class SysUserService : IDynamicApiController, ITransient
         var newUser = await _sysUserRep.AsInsertable(user).ExecuteReturnEntityAsync();
         input.Id = newUser.Id;
         await UpdateRoleAndExtOrg(input);
+
+        return newUser.Id;
+    }
+
+    /// <summary>
+    /// 更新用户
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    [UnitOfWork]
+    [ApiDescriptionSettings(Name = "Update"), HttpPost]
+    [DisplayName("更新用户")]
+    public async Task UpdateUser(UpdateUserInput input)
+    {
+        if (await _sysUserRep.AsQueryable().Filter(null, true).AnyAsync(u => u.Account == input.Account && u.Id != input.Id))
+            throw Oops.Oh(ErrorCodeEnum.D1003);
+
+        await _sysUserRep.AsUpdateable(input.Adapt<SysUser>()).IgnoreColumns(true)
+            .IgnoreColumns(u => new { u.AccountType, u.Password, u.Status }).ExecuteCommandAsync();
+
+        await UpdateRoleAndExtOrg(input);
+
+        // 删除用户机构缓存
+        SqlSugarFilter.DeleteUserOrgCache(input.Id, _sysUserRep.Context.CurrentConnectionConfig.ConfigId);
     }
 
     /// <summary>
@@ -103,25 +127,6 @@ public class SysUserService : IDynamicApiController, ITransient
     }
 
     /// <summary>
-    /// 更新用户
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    [UnitOfWork]
-    [ApiDescriptionSettings(Name = "Update"), HttpPost]
-    [DisplayName("更新用户")]
-    public async Task UpdateUser(UpdateUserInput input)
-    {
-        var isExist = await _sysUserRep.AsQueryable().Filter(null, true).AnyAsync(u => u.Account == input.Account && u.Id != input.Id);
-        if (isExist) throw Oops.Oh(ErrorCodeEnum.D1003);
-
-        await _sysUserRep.AsUpdateable(input.Adapt<SysUser>()).IgnoreColumns(true)
-            .IgnoreColumns(u => new { u.AccountType, u.Password, u.Status }).ExecuteCommandAsync();
-
-        await UpdateRoleAndExtOrg(input);
-    }
-
-    /// <summary>
     /// 删除用户
     /// </summary>
     /// <param name="input"></param>
@@ -131,9 +136,7 @@ public class SysUserService : IDynamicApiController, ITransient
     [DisplayName("删除用户")]
     public async Task DeleteUser(DeleteUserInput input)
     {
-        var user = await _sysUserRep.GetFirstAsync(u => u.Id == input.Id);
-        if (user == null)
-            throw Oops.Oh(ErrorCodeEnum.D1002);
+        var user = await _sysUserRep.GetFirstAsync(u => u.Id == input.Id) ?? throw Oops.Oh(ErrorCodeEnum.D0009);
         if (user.AccountType == AccountTypeEnum.SuperAdmin)
             throw Oops.Oh(ErrorCodeEnum.D1014);
         if (user.Id == _userManager.UserId)
@@ -178,7 +181,7 @@ public class SysUserService : IDynamicApiController, ITransient
     [DisplayName("设置用户状态")]
     public async Task<int> SetStatus(UserInput input)
     {
-        var user = await _sysUserRep.GetFirstAsync(u => u.Id == input.Id);
+        var user = await _sysUserRep.GetFirstAsync(u => u.Id == input.Id) ?? throw Oops.Oh(ErrorCodeEnum.D0009);
         if (user.AccountType == AccountTypeEnum.SuperAdmin)
             throw Oops.Oh(ErrorCodeEnum.D1015);
 
@@ -197,7 +200,7 @@ public class SysUserService : IDynamicApiController, ITransient
     [DisplayName("授权用户角色")]
     public async Task GrantRole(UserRoleInput input)
     {
-        var user = await _sysUserRep.GetFirstAsync(u => u.Id == input.UserId);
+        var user = await _sysUserRep.GetFirstAsync(u => u.Id == input.UserId) ?? throw Oops.Oh(ErrorCodeEnum.D0009);
         if (user.AccountType == AccountTypeEnum.SuperAdmin)
             throw Oops.Oh(ErrorCodeEnum.D1022);
 
@@ -212,7 +215,7 @@ public class SysUserService : IDynamicApiController, ITransient
     [DisplayName("修改用户密码")]
     public async Task<int> ChangePwd(ChangePwdInput input)
     {
-        var user = await _sysUserRep.GetFirstAsync(u => u.Id == _userManager.UserId);
+        var user = await _sysUserRep.GetFirstAsync(u => u.Id == _userManager.UserId) ?? throw Oops.Oh(ErrorCodeEnum.D0009);
         if (CryptogramUtil.CryptoType == CryptogramEnum.MD5.ToString())
         {
             if (user.Password != MD5Encryption.Encrypt(input.PasswordOld))
@@ -236,9 +239,8 @@ public class SysUserService : IDynamicApiController, ITransient
     [DisplayName("重置用户密码")]
     public async Task<string> ResetPwd(ResetPwdUserInput input)
     {
+        var user = await _sysUserRep.GetFirstAsync(u => u.Id == input.Id) ?? throw Oops.Oh(ErrorCodeEnum.D0009);
         var password = await _sysConfigService.GetConfigValue<string>(CommonConst.SysPassword);
-
-        var user = await _sysUserRep.GetFirstAsync(u => u.Id == input.Id);
         user.Password = CryptogramUtil.Encrypt(password);
         await _sysUserRep.AsUpdateable(user).UpdateColumns(u => u.Password).ExecuteCommandAsync();
         return password;

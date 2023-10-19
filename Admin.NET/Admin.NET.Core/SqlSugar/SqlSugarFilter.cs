@@ -17,6 +17,19 @@ public static class SqlSugarFilter
     private static readonly ICache _cache = Cache.Default;
 
     /// <summary>
+    /// 删除用户机构缓存
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <param name="dbConfigId"></param>
+    public static void DeleteUserOrgCache(long userId, string dbConfigId)
+    {
+        // 删除用户机构集合缓存
+        App.GetService<SysCacheService>().Remove($"{CacheConst.KeyUserOrg}{userId}");
+        // 删除用户机构（数据范围）过滤器缓存
+        _cache.Remove($"db:{dbConfigId}:orgList:{userId}");
+    }
+
+    /// <summary>
     /// 配置用户机构集合过滤器
     /// </summary>
     public static void SetOrgEntityFilter(SqlSugarScopeProvider db)
@@ -74,7 +87,7 @@ public static class SqlSugarFilter
         if (string.IsNullOrWhiteSpace(userId)) return maxDataScope;
 
         // 获取用户最大数据范围---仅本人数据
-        maxDataScope = App.GetService<SysCacheService>().Get<int>(CacheConst.KeyMaxDataScope + userId);
+        maxDataScope = App.GetService<SysCacheService>().Get<int>(CacheConst.KeyRoleMaxDataScope + userId);
         if (maxDataScope != (int)DataScopeEnum.Self) return maxDataScope;
 
         // 配置用户数据范围缓存
@@ -140,7 +153,7 @@ public static class SqlSugarFilter
                     // 排除非当前数据库实体
                     var tAtt = entityType.GetCustomAttribute<TenantAttribute>();
                     if ((tAtt != null && db.CurrentConnectionConfig.ConfigId.ToString() != tAtt.configId.ToString()) ||
-                        (tAtt == null && db.CurrentConnectionConfig.ConfigId.ToString() != SqlSugarConst.ConfigId))
+                        (tAtt == null && db.CurrentConnectionConfig.ConfigId.ToString() != SqlSugarConst.MainConfigId))
                         return;
 
                     tableFilterItems.Add(tableFilterItem);

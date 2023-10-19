@@ -13,7 +13,7 @@ namespace Admin.NET.Core;
 /// 系统角色机构表
 /// </summary>
 [SugarTable(null, "系统角色机构表")]
-[SystemTable]
+[SysTable]
 public class SysRoleOrg : EntityBaseId
 {
     /// <summary>
@@ -31,7 +31,6 @@ public class SysRoleOrg : EntityBaseId
     /// <summary>
     /// 机构
     /// </summary>
-    [SugarColumn(IsIgnore = true)]
     [Navigate(NavigateType.OneToOne, nameof(OrgId))]
     public SysOrg SysOrg { get; set; }
 }

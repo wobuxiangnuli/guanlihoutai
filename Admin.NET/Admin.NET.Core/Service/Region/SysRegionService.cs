@@ -1,4 +1,4 @@
-﻿// 麻省理工学院许可证
+// 麻省理工学院许可证
 //
 // 版权所有 (c) 2021-2023 zuohuaijun，大名科技（天津）有限公司  联系电话/微信：18020030720  QQ：515096995
 //
@@ -19,6 +19,9 @@ namespace Admin.NET.Core.Service;
 public class SysRegionService : IDynamicApiController, ITransient
 {
     private readonly SqlSugarRepository<SysRegion> _sysRegionRep;
+
+    // Url地址-国家统计局行政区域2023年
+    private readonly string _url = "http://www.stats.gov.cn/sj/tjbz/tjyqhdmhcxhfdm/2023/index.html";
 
     public SysRegionService(SqlSugarRepository<SysRegion> sysRegionRep)
     {
@@ -119,46 +122,12 @@ public class SysRegionService : IDynamicApiController, ITransient
     /// </summary>
     /// <returns></returns>
     [DisplayName("同步行政区域")]
-    public void Sync()
-    {
-        GetAllRegion();
-    }
-
-    /// <summary>
-    /// 获取所有省的选择数据
-    /// </summary>
-    /// <returns></returns>
-    [DisplayName("获取所有省的选择数据")]
-    public async Task<dynamic> GetProvince()
-    {
-        return await _sysRegionRep.AsQueryable().Where(u => u.Level == 1)
-            .Select(c=>new
-        {
-            id=c.Id,
-            name=c.Name,
-        }).ToListAsync();
-    }
-    /// <summary>
-    /// 根据父级id获取下属行政区域
-    /// </summary>
-    /// <returns></returns>
-    [DisplayName("根据父级id获取下属行政区域")]
-    public async Task<dynamic> GetChildRegionByPid(long pid)
-    {
-        return await _sysRegionRep.AsQueryable().Where(u => u.Pid == pid)
-            .Select(c => new
-            {
-                id = c.Id,
-                name = c.Name,
-            }).ToListAsync();
-    }
-    private async Task GetAllRegion()
+    public async Task Sync()
     {
         await _sysRegionRep.DeleteAsync(u => u.Id > 0);
-        // 国家统计局行政区域2022年
-        var url = "http://www.stats.gov.cn/sj/tjbz/tjyqhdmhcxhfdm/2022/index.html";
+
         var context = BrowsingContext.New(Configuration.Default.WithDefaultLoader());
-        var dom = await context.OpenAsync(url);
+        var dom = await context.OpenAsync(_url);
 
         // 省级
         var itemList = dom.QuerySelectorAll("table.provincetable tr.provincetr td a");

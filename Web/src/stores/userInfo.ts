@@ -5,7 +5,7 @@ import { useThemeConfig } from '/@/stores/themeConfig';
 
 import { getAPI } from '/@/utils/axios-utils';
 import { SysAuthApi, SysConstApi } from '/@/api-services/api';
-const baseUrl = import.meta.env.VITE_API_URL;
+import { getAllDict } from '/@/api/system/admin'; 
 
 /**
  * 用户信息
@@ -15,14 +15,15 @@ export const useUserInfo = defineStore('userInfo', {
 	state: (): UserInfosState => ({
 		userInfos: {} as any,
 		constList: [] as any,
+		dictList: [] as any,
 	}),
 	getters: {
-		// 获取系统常量列表
-		async getSysConstList(): Promise<any[]> {
-			var res = await getAPI(SysConstApi).apiSysConstListGet();
-			this.constList = res.data.result ?? [];
-			return this.constList;
-		},
+		// // 获取系统常量列表
+		// async getSysConstList(): Promise<any[]> {
+		// 	var res = await getAPI(SysConstApi).apiSysConstListGet();
+		// 	this.constList = res.data.result ?? [];
+		// 	return this.constList;
+		// },
 	},
 	actions: {
 		async setUserInfos() {
@@ -34,6 +35,27 @@ export const useUserInfo = defineStore('userInfo', {
 				this.userInfos = userInfos;
 			}
 		},
+		async setConstList() {
+			// 存储常量信息到浏览器缓存
+			if (Session.get('constList')) {
+				this.constList = Session.get('constList');
+			} else {
+				const constList = <any[]>await this.getSysConstList();
+				Session.set('constList', constList);
+				this.constList = constList;
+			}
+		},
+		async setDictList() {
+			// 存储字典信息到浏览器缓存
+			if (Session.get('dictList')) {
+				this.dictList = Session.get('dictList');
+			} else {
+				const res = await getAllDict();
+				const dictList = res.data.result ?? [];
+				Session.set('dictList', dictList);
+				this.dictList = dictList;
+			}
+		},
 		// 获取当前用户信息
 		getApiUserInfo() {
 			return new Promise((resolve) => {
@@ -43,9 +65,10 @@ export const useUserInfo = defineStore('userInfo', {
 						if (res.data.result == null) return;
 						var d = res.data.result;
 						const userInfos = {
+							id: d.id,
 							account: d.account,
 							realName: d.realName,
-							avatar: d.avatar ? d.avatar : '/favicon.ico',
+							avatar: d.avatar ? '/' + d.avatar : '/favicon.ico',
 							address: d.address,
 							signature: d.signature,
 							orgId: d.orgId,
@@ -73,6 +96,15 @@ export const useUserInfo = defineStore('userInfo', {
 						Local.set('themeConfig', storesThemeConfig.themeConfig);
 
 						resolve(userInfos);
+					});
+			});
+		},
+		getSysConstList() {
+			return new Promise((resolve) => {
+				getAPI(SysConstApi)
+					.apiSysConstListGet()
+					.then(async (res: any) => {
+						resolve(res.data.result ?? []);
 					});
 			});
 		},

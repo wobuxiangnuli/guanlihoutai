@@ -1,6 +1,6 @@
 <template>
 	<div class="sys-codeGenConfig-container">
-		<el-dialog v-model="state.isShowDialog" draggable :close-on-click-modal="false" width="1400px">
+		<el-dialog v-model="state.isShowDialog" draggable :close-on-click-modal="false" width="1500px">
 			<template #header>
 				<div style="color: #fff">
 					<el-icon size="16" style="margin-right: 3px; display: inline; vertical-align: middle"> <ele-Edit /> </el-icon>
@@ -9,13 +9,13 @@
 			</template>
 			<el-table :data="state.tableData" style="width: 100%" v-loading="state.loading" border>
 				<el-table-column type="index" label="序号" width="55" align="center" />
-				<el-table-column prop="columnName" label="字段" width="180" show-overflow-tooltip />
+				<el-table-column prop="propertyName" label="实体属性" width="180" show-overflow-tooltip />
 				<el-table-column prop="columnComment" label="描述" width="180" show-overflow-tooltip>
 					<template #default="scope">
 						<el-input v-model="scope.row.columnComment" autocomplete="off" />
 					</template>
 				</el-table-column>
-				<el-table-column prop="netType" label="数据类型" minWidth="120" show-overflow-tooltip />
+				<el-table-column prop="netType" label="数据类型" minWidth="90" show-overflow-tooltip />
 				<el-table-column prop="effectType" label="作用类型" width="120" show-overflow-tooltip>
 					<template #default="scope">
 						<el-select v-model="scope.row.effectType" class="m-2" placeholder="Select" :disabled="judgeColumns(scope.row)" @change="effectTypeChange(scope.row, scope.$index)">
@@ -56,6 +56,11 @@
 						<el-select v-model="scope.row.queryType" class="m-2" placeholder="Select" :disabled="!scope.row.queryWhether">
 							<el-option v-for="item in state.queryTypeList" :key="item.code" :label="item.value" :value="item.code" />
 						</el-select>
+					</template>
+				</el-table-column>
+				<el-table-column prop="orderNo" label="排序" width="70" show-overflow-tooltip>
+					<template #default="scope">
+						<el-input v-model="scope.row.orderNo" autocomplete="off" type="number" />
 					</template>
 				</el-table-column>
 			</el-table>

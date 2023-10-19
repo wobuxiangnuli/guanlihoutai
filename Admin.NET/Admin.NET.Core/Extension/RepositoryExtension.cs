@@ -42,6 +42,34 @@ public static class RepositoryExtension
     }
 
     /// <summary>
+    /// 实体集合批量假删除 _rep.FakeDelete(entity)
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="repository"></param>
+    /// <param name="entity"></param>
+    /// <returns></returns>
+    public static int FakeDelete<T>(this ISugarRepository repository, List<T> entity) where T : EntityBase, new()
+    {
+        return repository.Context.FakeDelete(entity);
+    }
+
+    /// <summary>
+    /// 实体集合批量假删除 db.FakeDelete(entity)
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="db"></param>
+    /// <param name="entity"></param>
+    /// <returns></returns>
+    public static int FakeDelete<T>(this ISqlSugarClient db, List<T> entity) where T : EntityBase, new()
+    {
+        return db.Updateable(entity).AS().ReSetValue(x => { x.IsDelete = true; })
+            .IgnoreColumns(ignoreAllNullColumns: true)
+            .EnableDiffLogEvent()   // 记录差异日志
+            .UpdateColumns(x => new { x.IsDelete, x.UpdateTime, x.UpdateUserId })  // 允许更新的字段-AOP拦截自动设置UpdateTime、UpdateUserId
+            .ExecuteCommand();
+    }
+
+    /// <summary>
     /// 实体假删除异步 _rep.FakeDeleteAsync(entity)
     /// </summary>
     /// <typeparam name="T"></typeparam>
@@ -70,21 +98,47 @@ public static class RepositoryExtension
     }
 
     /// <summary>
+    /// 实体集合批量假删除异步 _rep.FakeDeleteAsync(entity)
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="repository"></param>
+    /// <param name="entity"></param>
+    /// <returns></returns>
+    public static Task<int> FakeDeleteAsync<T>(this ISugarRepository repository, List<T> entity) where T : EntityBase, new()
+    {
+        return repository.Context.FakeDeleteAsync(entity);
+    }
+
+    /// <summary>
+    /// 实体集合批量假删除 db.FakeDelete(entity)
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="db"></param>
+    /// <param name="entity"></param>
+    /// <returns></returns>
+    public static Task<int> FakeDeleteAsync<T>(this ISqlSugarClient db, List<T> entity) where T : EntityBase, new()
+    {
+        return db.Updateable(entity).AS().ReSetValue(x => { x.IsDelete = true; })
+            .IgnoreColumns(ignoreAllNullColumns: true)
+            .EnableDiffLogEvent()   // 记录差异日志
+            .UpdateColumns(x => new { x.IsDelete, x.UpdateTime, x.UpdateUserId })  // 允许更新的字段-AOP拦截自动设置UpdateTime、UpdateUserId
+            .ExecuteCommandAsync();
+    }
+
+    /// <summary>
     /// 排序方式(默认降序)
     /// </summary>
     /// <param name="queryable"></param>
     /// <param name="pageInput"> </param>
-    /// <param name="defualtSortField"> 默认排序字段 </param>
+    /// <param name="prefix"> </param>
+    /// <param name="defaultSortField"> 默认排序字段 </param>
     /// <param name="descSort"> 是否降序 </param>
     /// <returns> </returns>
-    public static ISugarQueryable<T> OrderBuilder<T>(this ISugarQueryable<T> queryable, BasePageInput pageInput, string defualtSortField = "Id", bool descSort = true)
+    public static ISugarQueryable<T> OrderBuilder<T>(this ISugarQueryable<T> queryable, BasePageInput pageInput, string prefix = "", string defaultSortField = "Id", bool descSort = true)
     {
-        var orderStr = "";
         // 约定默认每张表都有Id排序
-        if (!string.IsNullOrWhiteSpace(defualtSortField))
-        {
-            orderStr = descSort ? defualtSortField + " Desc" : defualtSortField + " Asc";
-        }
+        var orderStr = string.IsNullOrWhiteSpace(defaultSortField) ? "" : $"{prefix}{defaultSortField}" + (descSort ? " Desc" : " Asc");
+
         TypeAdapterConfig typeAdapterConfig = new();
         typeAdapterConfig.ForType<T, BasePageInput>().IgnoreNullValues(true);
         Mapper mapper = new(typeAdapterConfig); // 务必将mapper设为单实例
@@ -92,11 +146,10 @@ public static class RepositoryExtension
         // 排序是否可用-排序字段和排序顺序都为非空才启用排序
         if (!string.IsNullOrEmpty(nowPagerInput.Field) && !string.IsNullOrEmpty(nowPagerInput.Order))
         {
-            var col = queryable.Context.EntityMaintenance.GetEntityInfo<T>().Columns
-                .FirstOrDefault(u => u.PropertyName.Equals(nowPagerInput.Field, StringComparison.CurrentCultureIgnoreCase));
+            var col = queryable.Context.EntityMaintenance.GetEntityInfo<T>().Columns.FirstOrDefault(u => u.PropertyName.Equals(nowPagerInput.Field, StringComparison.CurrentCultureIgnoreCase));
             orderStr = col != null
-                ? $"{col.DbColumnName} {(nowPagerInput.Order == nowPagerInput.DescStr ? "Desc" : "Asc")}"
-                : $"{nowPagerInput.Field} {(nowPagerInput.Order == nowPagerInput.DescStr ? "Desc" : "Asc")}";
+                ? $"{prefix}{col.DbColumnName} {(nowPagerInput.Order == nowPagerInput.DescStr ? "Desc" : "Asc")}"
+                : $"{prefix}{nowPagerInput.Field} {(nowPagerInput.Order == nowPagerInput.DescStr ? "Desc" : "Asc")}";
         }
         return queryable.OrderByIF(!string.IsNullOrWhiteSpace(orderStr), orderStr);
     }
@@ -273,7 +326,7 @@ public static class RepositoryExtension
     {
         var entityType = typeof(T);
         var attr = entityType.GetCustomAttribute<TenantAttribute>();
-        var configId = attr == null ? SqlSugarConst.ConfigId : attr.configId.ToString();
+        var configId = attr == null ? SqlSugarConst.MainConfigId : attr.configId.ToString();
         var tableName = entityType.GetCustomAttribute<SugarTable>().TableName;
         return new Tuple<string, string>(configId, tableName);
     }

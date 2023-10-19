@@ -13,7 +13,7 @@ namespace Admin.NET.Core;
 /// 系统机构表
 /// </summary>
 [SugarTable(null, "系统机构表")]
-[SystemTable]
+[SysTable]
 public class SysOrg : EntityTenant
 {
     /// <summary>
@@ -43,17 +43,35 @@ public class SysOrg : EntityTenant
     public int? Level { get; set; }
 
     /// <summary>
-    /// 机构类型
+    /// 机构类型-数据字典
     /// </summary>
     [SugarColumn(ColumnDescription = "机构类型", Length = 64)]
     [MaxLength(64)]
-    public string? OrgType { get; set; }
+    public string? Type { get; set; }
+
+    /// <summary>
+    /// 负责人Id
+    /// </summary>
+    [SugarColumn(ColumnDescription = "负责人Id")]
+    public long? DirectorId { get; set; }
+
+    /// <summary>
+    /// 负责人
+    /// </summary>
+    [Navigate(NavigateType.OneToOne, nameof(DirectorId))]
+    public SysUser Director { get; set; }
 
     /// <summary>
     /// 排序
     /// </summary>
     [SugarColumn(ColumnDescription = "排序")]
     public int OrderNo { get; set; } = 100;
+
+    /// <summary>
+    /// 状态
+    /// </summary>
+    [SugarColumn(ColumnDescription = "状态")]
+    public StatusEnum Status { get; set; } = StatusEnum.Enable;
 
     /// <summary>
     /// 备注
@@ -63,14 +81,14 @@ public class SysOrg : EntityTenant
     public string? Remark { get; set; }
 
     /// <summary>
-    /// 状态
-    /// </summary>
-    [SugarColumn(ColumnDescription = "状态")]
-    public StatusEnum Status { get; set; } = StatusEnum.Enable;
-
-    /// <summary>
     /// 机构子项
     /// </summary>
     [SugarColumn(IsIgnore = true)]
     public List<SysOrg> Children { get; set; }
+
+    /// <summary>
+    /// 是否禁止选中
+    /// </summary>
+    [SugarColumn(IsIgnore = true)]
+    public bool Disabled { get; set; }
 }

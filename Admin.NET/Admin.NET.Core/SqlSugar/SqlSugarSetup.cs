@@ -17,6 +17,9 @@ public static class SqlSugarSetup
     /// <param name="services"></param>
     public static void AddSqlSugar(this IServiceCollection services)
     {
+        // 注册雪花Id
+        YitIdHelper.SetIdGenerator(App.GetOptions<SnowIdOptions>());
+
         // 自定义 SqlSugar 雪花ID算法
         SnowFlakeSingle.WorkId = App.GetOptions<SnowIdOptions>().WorkerId;
         StaticConfig.CustomSnowFlakeFunc = () =>
@@ -32,7 +35,7 @@ public static class SqlSugarSetup
             dbOptions.ConnectionConfigs.ForEach(config =>
             {
                 var dbProvider = db.GetConnectionScope(config.ConfigId);
-                SetDbAop(dbProvider);
+                SetDbAop(dbProvider, dbOptions.EnableConsoleSql);
                 SetDbDiffLog(dbProvider, config);
             });
         });
@@ -62,7 +65,7 @@ public static class SqlSugarSetup
                 // 只处理贴了特性[SugarTable]表
                 if (!type.GetCustomAttributes<SugarTable>().Any())
                     return;
-                if (config.EnableUnderLine && !entity.DbTableName.Contains('_'))
+                if (config.DbSettings.EnableUnderLine && !entity.DbTableName.Contains('_'))
                     entity.DbTableName = UtilMethods.ToUnderLine(entity.DbTableName); // 驼峰转下划线
             },
             EntityService = (type, column) => // 处理列
@@ -72,16 +75,8 @@ public static class SqlSugarSetup
                     return;
                 if (new NullabilityInfoContext().Create(type).WriteState is NullabilityState.Nullable)
                     column.IsNullable = true;
-                if (config.EnableUnderLine && !column.IsIgnore && !column.DbColumnName.Contains('_'))
+                if (config.DbSettings.EnableUnderLine && !column.IsIgnore && !column.DbColumnName.Contains('_'))
                     column.DbColumnName = UtilMethods.ToUnderLine(column.DbColumnName); // 驼峰转下划线
-
-                if (config.DbType == SqlSugar.DbType.Oracle)
-                {
-                    if (type.PropertyType == typeof(long) || type.PropertyType == typeof(long?))
-                        column.DataType = "number(18)";
-                    if (type.PropertyType == typeof(bool) || type.PropertyType == typeof(bool?))
-                        column.DataType = "number(1)";
-                }
             },
             DataInfoCacheService = new SqlSugarCache(),
         };
@@ -101,7 +96,8 @@ public static class SqlSugarSetup
     /// 配置Aop
     /// </summary>
     /// <param name="db"></param>
-    public static void SetDbAop(SqlSugarScopeProvider db)
+    /// <param name="enableConsoleSql"></param>
+    public static void SetDbAop(SqlSugarScopeProvider db, bool enableConsoleSql)
     {
         var config = db.CurrentConnectionConfig;
 
@@ -109,45 +105,62 @@ public static class SqlSugarSetup
         db.Ado.CommandTimeOut = 30;
 
         // 打印SQL语句
-        db.Aop.OnLogExecuting = (sql, pars) =>
+        if (enableConsoleSql)
         {
-            var originColor = Console.ForegroundColor;
-            if (sql.StartsWith("SELECT", StringComparison.OrdinalIgnoreCase))
-                Console.ForegroundColor = ConsoleColor.Green;
-            if (sql.StartsWith("UPDATE", StringComparison.OrdinalIgnoreCase) || sql.StartsWith("INSERT", StringComparison.OrdinalIgnoreCase))
-                Console.ForegroundColor = ConsoleColor.Yellow;
-            if (sql.StartsWith("DELETE", StringComparison.OrdinalIgnoreCase))
-                Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("【" + DateTime.Now + "——执行SQL】\r\n" + UtilMethods.GetSqlString(config.DbType, sql, pars) + "\r\n");
-            Console.ForegroundColor = originColor;
-            App.PrintToMiniProfiler("SqlSugar", "Info", sql + "\r\n" + db.Utilities.SerializeObject(pars.ToDictionary(it => it.ParameterName, it => it.Value)));
-        };
-        db.Aop.OnError = ex =>
-        {
-            if (ex.Parametres == null) return;
-            var originColor = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.DarkRed;
-            var pars = db.Utilities.SerializeObject(((SugarParameter[])ex.Parametres).ToDictionary(it => it.ParameterName, it => it.Value));
-            Console.WriteLine("【" + DateTime.Now + "——错误SQL】\r\n" + UtilMethods.GetSqlString(config.DbType, ex.Sql, (SugarParameter[])ex.Parametres) + "\r\n");
-            Console.ForegroundColor = originColor;
-            App.PrintToMiniProfiler("SqlSugar", "Error", $"{ex.Message}{Environment.NewLine}{ex.Sql}{pars}{Environment.NewLine}");
-        };
-
+            db.Aop.OnLogExecuting = (sql, pars) =>
+            {
+                var originColor = Console.ForegroundColor;
+                if (sql.StartsWith("SELECT", StringComparison.OrdinalIgnoreCase))
+                    Console.ForegroundColor = ConsoleColor.Green;
+                if (sql.StartsWith("UPDATE", StringComparison.OrdinalIgnoreCase) || sql.StartsWith("INSERT", StringComparison.OrdinalIgnoreCase))
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                if (sql.StartsWith("DELETE", StringComparison.OrdinalIgnoreCase))
+                    Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("【" + DateTime.Now + "——执行SQL】\r\n" + UtilMethods.GetSqlString(config.DbType, sql, pars) + "\r\n");
+                Console.ForegroundColor = originColor;
+                App.PrintToMiniProfiler("SqlSugar", "Info", sql + "\r\n" + db.Utilities.SerializeObject(pars.ToDictionary(it => it.ParameterName, it => it.Value)));
+            };
+            db.Aop.OnError = ex =>
+            {
+                if (ex.Parametres == null) return;
+                var originColor = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.DarkRed;
+                var pars = db.Utilities.SerializeObject(((SugarParameter[])ex.Parametres).ToDictionary(it => it.ParameterName, it => it.Value));
+                Console.WriteLine("【" + DateTime.Now + "——错误SQL】\r\n" + UtilMethods.GetSqlString(config.DbType, ex.Sql, (SugarParameter[])ex.Parametres) + "\r\n");
+                Console.ForegroundColor = originColor;
+                App.PrintToMiniProfiler("SqlSugar", "Error", $"{ex.Message}{Environment.NewLine}{ex.Sql}{pars}{Environment.NewLine}");
+            };
+            db.Aop.OnLogExecuted = (sql, pars) =>
+            {
+                // 执行时间超过5秒
+                if (db.Ado.SqlExecutionTime.TotalSeconds > 5)
+                {
+                    var fileName = db.Ado.SqlStackTrace.FirstFileName; // 文件名
+                    var fileLine = db.Ado.SqlStackTrace.FirstLine; // 行号
+                    var firstMethodName = db.Ado.SqlStackTrace.FirstMethodName; // 方法名
+                    var log = $"【所在文件名】：{fileName}\r\n【代码行数】：{fileLine}\r\n【方法名】：{firstMethodName}\r\n" + $"【sql语句】：{UtilMethods.GetSqlString(config.DbType, sql, pars)}";
+                    var originColor = Console.ForegroundColor;
+                    Console.ForegroundColor = ConsoleColor.DarkYellow;
+                    Console.WriteLine(log);
+                    Console.ForegroundColor = originColor;
+                }
+            };
+        }
         // 数据审计
         db.Aop.DataExecuting = (oldValue, entityInfo) =>
         {
-            // 演示环境判断
-            if (entityInfo.EntityColumnInfo.IsPrimarykey)
-            {
-                if (entityInfo.EntityName != nameof(SysJobDetail) && entityInfo.EntityName != nameof(SysJobTrigger) &&
-                    entityInfo.EntityName != nameof(SysLogOp) && entityInfo.EntityName != nameof(SysLogVis) &&
-                    entityInfo.EntityName != nameof(SysOnlineUser))
-                {
-                    var isDemoEnv = App.GetService<SysConfigService>().GetConfigValue<bool>(CommonConst.SysDemoEnv).GetAwaiter().GetResult();
-                    if (isDemoEnv)
-                        throw Oops.Oh(ErrorCodeEnum.D1200);
-                }
-            }
+            //// 演示环境判断
+            //if (entityInfo.EntityColumnInfo.IsPrimarykey)
+            //{
+            //    if (entityInfo.EntityName != nameof(SysJobDetail) && entityInfo.EntityName != nameof(SysJobTrigger) &&
+            //        entityInfo.EntityName != nameof(SysLogOp) && entityInfo.EntityName != nameof(SysLogVis) &&
+            //        entityInfo.EntityName != nameof(SysOnlineUser))
+            //    {
+            //        var isDemoEnv = App.GetService<SysConfigService>().GetConfigValue<bool>(CommonConst.SysDemoEnv).GetAwaiter().GetResult();
+            //        if (isDemoEnv)
+            //            throw Oops.Oh(ErrorCodeEnum.D1200);
+            //    }
+            //}
 
             if (entityInfo.OperationType == DataFilterType.InsertByObject)
             {
@@ -192,12 +205,13 @@ public static class SqlSugarSetup
             }
         };
 
-        // 超管时排除各种过滤器
+        // 超管排除其他过滤器
         if (App.User?.FindFirst(ClaimConst.AccountType)?.Value == ((int)AccountTypeEnum.SuperAdmin).ToString())
             return;
 
-        // 配置实体假删除过滤器
+        // 配置假删除过滤器
         db.QueryFilter.AddTableFilter<IDeletedFilter>(u => u.IsDelete == false);
+
         // 配置租户过滤器
         var tenantId = App.User?.FindFirst(ClaimConst.TenantId)?.Value;
         if (!string.IsNullOrWhiteSpace(tenantId))
@@ -205,6 +219,7 @@ public static class SqlSugarSetup
 
         // 配置用户机构（数据范围）过滤器
         SqlSugarFilter.SetOrgEntityFilter(db);
+
         // 配置自定义过滤器
         SqlSugarFilter.SetCustomEntityFilter(db);
     }
@@ -216,7 +231,7 @@ public static class SqlSugarSetup
     /// <param name="config"></param>
     private static void SetDbDiffLog(SqlSugarScopeProvider db, DbConnectionConfig config)
     {
-        if (!config.EnableDiffLog) return;
+        if (!config.DbSettings.EnableDiffLog) return;
 
         db.Aop.OnDiffLogEvent = async u =>
         {
@@ -247,62 +262,81 @@ public static class SqlSugarSetup
     /// <param name="config"></param>
     private static void InitDatabase(SqlSugarScope db, DbConnectionConfig config)
     {
-        if (!config.EnableInitDb) return;
-
         SqlSugarScopeProvider dbProvider = db.GetConnectionScope(config.ConfigId);
 
-        // 创建数据库
-        if (config.DbType != SqlSugar.DbType.Oracle)
-            dbProvider.DbMaintenance.CreateDatabase();
-
-        // 获取所有实体表-初始化表结构
-        var entityTypes = App.EffectiveTypes.Where(u => !u.IsInterface && !u.IsAbstract && u.IsClass && u.IsDefined(typeof(SugarTable), false)).ToList();
-        if (!entityTypes.Any()) return;
-        foreach (var entityType in entityTypes)
+        // 初始化/创建数据库
+        if (config.DbSettings.EnableInitDb)
         {
-            var tAtt = entityType.GetCustomAttribute<TenantAttribute>();
-            if (tAtt != null && tAtt.configId.ToString() != config.ConfigId) continue;
-            if (tAtt == null && config.ConfigId != SqlSugarConst.ConfigId) continue;
-
-            if (entityType.GetCustomAttribute<SplitTableAttribute>() == null)
-                dbProvider.CodeFirst.InitTables(entityType);
-            else
-                dbProvider.CodeFirst.SplitTables().InitTables(entityType);
+            if (config.DbType != SqlSugar.DbType.Oracle)
+                dbProvider.DbMaintenance.CreateDatabase();
         }
 
-        if (!config.EnableInitSeed) return;
-
-        // 获取所有种子配置-初始化数据
-        var seedDataTypes = App.EffectiveTypes.Where(u => !u.IsInterface && !u.IsAbstract && u.IsClass
-            && u.GetInterfaces().Any(i => i.HasImplementedRawGeneric(typeof(ISqlSugarEntitySeedData<>)))).ToList();
-        if (!seedDataTypes.Any()) return;
-        foreach (var seedType in seedDataTypes)
+        // 初始化表结构
+        if (config.TableSettings.EnableInitTable)
         {
-            var instance = Activator.CreateInstance(seedType);
+            var entityTypes = App.EffectiveTypes.Where(u => !u.IsInterface && !u.IsAbstract && u.IsClass && u.IsDefined(typeof(SugarTable), false))
+                .WhereIF(config.TableSettings.EnableIncreTable, u => u.IsDefined(typeof(IncreTableAttribute), false)).ToList();
 
-            var hasDataMethod = seedType.GetMethod("HasData");
-            var seedData = ((IEnumerable)hasDataMethod?.Invoke(instance, null))?.Cast<object>();
-            if (seedData == null) continue;
-
-            var entityType = seedType.GetInterfaces().First().GetGenericArguments().First();
-            var tAtt = entityType.GetCustomAttribute<TenantAttribute>();
-            if (tAtt != null && tAtt.configId.ToString() != config.ConfigId) continue;
-            if (tAtt == null && config.ConfigId != SqlSugarConst.ConfigId) continue;
-
-            var entityInfo = dbProvider.EntityMaintenance.GetEntityInfo(entityType);
-            if (entityInfo.Columns.Any(u => u.IsPrimarykey))
-            {
-                // 按主键进行批量增加和更新
-                var storage = dbProvider.StorageableByObject(seedData.ToList()).ToStorage();
-                storage.AsInsertable.ExecuteCommand();
-                var ignoreUpdate = hasDataMethod.GetCustomAttribute<IgnoreUpdateAttribute>();
-                if (ignoreUpdate == null) storage.AsUpdateable.ExecuteCommand();
-            }
+            if (config.ConfigId == SqlSugarConst.MainConfigId) // 默认库（有系统表特性、没有日志表和租户表特性）
+                entityTypes = entityTypes.Where(u => u.GetCustomAttributes<SysTableAttribute>().Any() || (!u.GetCustomAttributes<LogTableAttribute>().Any() && !u.GetCustomAttributes<TenantAttribute>().Any())).ToList();
+            else if (config.ConfigId == SqlSugarConst.LogConfigId) // 日志库
+                entityTypes = entityTypes.Where(u => u.GetCustomAttributes<LogTableAttribute>().Any()).ToList();
             else
+                entityTypes = entityTypes.Where(u => u.GetCustomAttribute<TenantAttribute>()?.configId.ToString() == config.ConfigId).ToList(); // 自定义的库
+
+            foreach (var entityType in entityTypes)
             {
-                // 无主键则只进行插入
-                if (!dbProvider.Queryable(entityInfo.DbTableName, entityInfo.DbTableName).Any())
-                    dbProvider.InsertableByObject(seedData.ToList()).ExecuteCommand();
+                if (entityType.GetCustomAttribute<SplitTableAttribute>() == null)
+                    dbProvider.CodeFirst.InitTables(entityType);
+                else
+                    dbProvider.CodeFirst.SplitTables().InitTables(entityType);
+            }
+        }
+
+        // 初始化种子数据
+        if (config.SeedSettings.EnableInitSeed)
+        {
+            var seedDataTypes = App.EffectiveTypes.Where(u => !u.IsInterface && !u.IsAbstract && u.IsClass && u.GetInterfaces().Any(i => i.HasImplementedRawGeneric(typeof(ISqlSugarEntitySeedData<>))))
+                .WhereIF(config.SeedSettings.EnableIncreSeed, u => u.IsDefined(typeof(IncreSeedAttribute), false)).ToList();
+
+            foreach (var seedType in seedDataTypes)
+            {
+                var entityType = seedType.GetInterfaces().First().GetGenericArguments().First();
+                if (config.ConfigId == SqlSugarConst.MainConfigId) // 默认库（有系统表特性、没有日志表和租户表特性）
+                {
+                    if (entityType.GetCustomAttribute<SysTableAttribute>() == null && (entityType.GetCustomAttribute<LogTableAttribute>() != null || entityType.GetCustomAttribute<TenantAttribute>() != null))
+                        continue;
+                }
+                else if (config.ConfigId == SqlSugarConst.LogConfigId) // 日志库
+                {
+                    if (entityType.GetCustomAttribute<LogTableAttribute>() == null)
+                        continue;
+                }
+                else
+                {
+                    var att = entityType.GetCustomAttribute<TenantAttribute>(); // 自定义的库
+                    if (att == null || att.configId.ToString() != config.ConfigId) continue;
+                }
+
+                var instance = Activator.CreateInstance(seedType);
+                var hasDataMethod = seedType.GetMethod("HasData");
+                var seedData = ((IEnumerable)hasDataMethod?.Invoke(instance, null))?.Cast<object>();
+                if (seedData == null) continue;
+
+                var entityInfo = dbProvider.EntityMaintenance.GetEntityInfo(entityType);
+                if (entityInfo.Columns.Any(u => u.IsPrimarykey))
+                {
+                    // 按主键进行批量增加和更新
+                    var storage = dbProvider.StorageableByObject(seedData.ToList()).ToStorage();
+                    storage.AsInsertable.ExecuteCommand();
+                    storage.AsUpdateable.ExecuteCommand();
+                }
+                else
+                {
+                    // 无主键则只进行插入
+                    if (!dbProvider.Queryable(entityInfo.DbTableName, entityInfo.DbTableName).Any())
+                        dbProvider.InsertableByObject(seedData.ToList()).ExecuteCommand();
+                }
             }
         }
     }
@@ -320,9 +354,9 @@ public static class SqlSugarSetup
         var db = iTenant.GetConnectionScope(config.ConfigId);
         db.DbMaintenance.CreateDatabase();
 
-        // 获取所有实体表-初始化租户业务表
-        var entityTypes = App.EffectiveTypes.Where(u => !u.IsInterface && !u.IsAbstract && u.IsClass
-            && u.IsDefined(typeof(SugarTable), false) && !u.IsDefined(typeof(SystemTableAttribute), false)).ToList();
+        // 获取所有系统表-初始化租户库表结构
+        var entityTypes = App.EffectiveTypes.Where(u => !u.IsInterface && !u.IsAbstract && u.IsClass &&
+            u.IsDefined(typeof(SugarTable), false) && !u.IsDefined(typeof(SysTableAttribute), false) && !u.IsDefined(typeof(TenantAttribute), false)).ToList();
         if (!entityTypes.Any()) return;
         foreach (var entityType in entityTypes)
         {

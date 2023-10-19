@@ -119,6 +119,7 @@ const state = reactive({
 const openDialog = (row: any) => {
 	state.ruleForm = row;
 	state.isShowDialog = true;
+	ruleFormRef.value?.resetFields();
 };
 
 // 关闭弹窗
@@ -140,7 +141,7 @@ const submit = () => {
 		if (state.tableData.length === 0) {
 			ElMessage({
 				type: 'error',
-				message: `请选择库名!`,
+				message: `请添加列!`,
 			});
 			return;
 		}
@@ -175,13 +176,13 @@ function addPrimaryColumn() {
 function addColumn() {
 	state.tableData.push({
 		columnDescription: '',
-		dataType: '',
+		dataType: 'varchar',
 		dbColumnName: '',
 		decimalDigits: 0,
 		isIdentity: 0,
 		isNullable: 1,
 		isPrimarykey: 0,
-		length: 0,
+		length: 32,
 		key: colIndex,
 		editable: true,
 		isNew: true,

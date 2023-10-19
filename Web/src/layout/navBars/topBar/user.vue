@@ -1,85 +1,80 @@
 <template>
-  <div class="layout-navbars-breadcrumb-user pr15" :style="{ flex: layoutUserFlexNum }">
-    <div class="layout-navbars-breadcrumb-user-icon" title="开启或关闭创建自定义菜单" @click="showorhidebtn">
-      <el-icon>
-        <ele-Hide />
-      </el-icon>
-    </div>
-    <el-dropdown :show-timeout="70" :hide-timeout="50" trigger="click" @command="onComponentSizeChange">
-      <div class="layout-navbars-breadcrumb-user-icon">
-        <i class="iconfont icon-ziti" :title="$t('message.user.title0')"></i>
-      </div>
-      <template #dropdown>
-        <el-dropdown-menu>
-          <el-dropdown-item command="large" :disabled="state.disabledSize === 'large'">{{ $t('message.user.dropdownLarge') }}</el-dropdown-item>
-          <el-dropdown-item command="default" :disabled="state.disabledSize === 'default'">{{ $t('message.user.dropdownDefault') }}</el-dropdown-item>
-          <el-dropdown-item command="small" :disabled="state.disabledSize === 'small'">{{ $t('message.user.dropdownSmall') }}</el-dropdown-item>
-        </el-dropdown-menu>
-      </template>
-    </el-dropdown>
-    <el-dropdown :show-timeout="70" :hide-timeout="50" trigger="click" @command="onLanguageChange">
-      <div class="layout-navbars-breadcrumb-user-icon">
-        <i class="iconfont" :class="state.disabledI18n === 'en' ? 'icon-fuhao-yingwen' : 'icon-fuhao-zhongwen'" :title="$t('message.user.title1')"></i>
-      </div>
-      <template #dropdown>
-        <el-dropdown-menu>
-          <el-dropdown-item command="zh-cn" :disabled="state.disabledI18n === 'zh-cn'">简体中文</el-dropdown-item>
-          <el-dropdown-item command="en" :disabled="state.disabledI18n === 'en'">English</el-dropdown-item>
-          <el-dropdown-item command="zh-tw" :disabled="state.disabledI18n === 'zh-tw'">繁體中文</el-dropdown-item>
-        </el-dropdown-menu>
-      </template>
-    </el-dropdown>
-    <div class="layout-navbars-breadcrumb-user-icon" @click="onSearchClick">
-      <el-icon :title="$t('message.user.title2')">
-        <ele-Search />
-      </el-icon>
-    </div>
-    <div class="layout-navbars-breadcrumb-user-icon" @click="onLayoutSetingClick">
-      <i class="icon-skin iconfont" :title="$t('message.user.title3')"></i>
-    </div>
-    <div class="layout-navbars-breadcrumb-user-icon">
-      <el-popover placement="bottom" trigger="hover" transition="el-zoom-in-top" :width="300" :persistent="false">
-        <template #reference>
-          <el-badge :is-dot="hasUnreadNotice">
-            <el-icon :title="$t('message.user.title4')">
-              <ele-Bell />
-            </el-icon>
-          </el-badge>
-        </template>
-        <UserNews :noticeList="state.noticeList" />
-      </el-popover>
-    </div>
-    <div class="layout-navbars-breadcrumb-user-icon" @click="onScreenfullClick">
-      <i class="iconfont" :title="state.isScreenfull ? $t('message.user.title6') : $t('message.user.title5')" :class="!state.isScreenfull ? 'icon-fullscreen' : 'icon-tuichuquanping'"></i>
-    </div>
-    <div class="layout-navbars-breadcrumb-user-icon mr10" @click="onOnlineUserClick">
-      <el-icon title="在线用户">
-        <ele-User />
-      </el-icon>
-    </div>
-    <el-dropdown :show-timeout="70" :hide-timeout="50" @command="onHandleCommandClick">
-      <span class="layout-navbars-breadcrumb-user-link">
-        <img :src="userInfos.avatar" class="layout-navbars-breadcrumb-user-link-photo mr5" />
-        {{ userInfos.account === '' ? 'common' : userInfos.account }}
-        <el-icon class="el-icon--right">
-          <ele-ArrowDown />
-        </el-icon>
-      </span>
-      <template #dropdown>
-        <el-dropdown-menu>
-          <!-- <el-dropdown-item command="/dashboard/home">{{ $t('message.user.dropdown1') }}</el-dropdown-item> -->
-          <el-dropdown-item command="/system/userCenter">{{ $t('message.user.dropdown2') }}</el-dropdown-item>
-          <el-dropdown-item divided command="logOut">{{ $t('message.user.dropdown5') }}</el-dropdown-item>
-        </el-dropdown-menu>
-      </template>
-    </el-dropdown>
-    <Search ref="searchRef" />
-    <OnlineUser ref="onlineUserRef" />
-  </div>
+	<div class="layout-navbars-breadcrumb-user pr15" :style="{ flex: layoutUserFlexNum }">
+		<el-dropdown :show-timeout="70" :hide-timeout="50" trigger="click" @command="onComponentSizeChange">
+			<div class="layout-navbars-breadcrumb-user-icon">
+				<i class="iconfont icon-ziti" :title="$t('message.user.title0')"></i>
+			</div>
+			<template #dropdown>
+				<el-dropdown-menu>
+					<el-dropdown-item command="large" :disabled="state.disabledSize === 'large'">{{ $t('message.user.dropdownLarge') }}</el-dropdown-item>
+					<el-dropdown-item command="default" :disabled="state.disabledSize === 'default'">{{ $t('message.user.dropdownDefault') }}</el-dropdown-item>
+					<el-dropdown-item command="small" :disabled="state.disabledSize === 'small'">{{ $t('message.user.dropdownSmall') }}</el-dropdown-item>
+				</el-dropdown-menu>
+			</template>
+		</el-dropdown>
+		<el-dropdown :show-timeout="70" :hide-timeout="50" trigger="click" @command="onLanguageChange">
+			<div class="layout-navbars-breadcrumb-user-icon">
+				<i class="iconfont" :class="state.disabledI18n === 'en' ? 'icon-fuhao-yingwen' : 'icon-fuhao-zhongwen'" :title="$t('message.user.title1')"></i>
+			</div>
+			<template #dropdown>
+				<el-dropdown-menu>
+					<el-dropdown-item command="zh-cn" :disabled="state.disabledI18n === 'zh-cn'">简体中文</el-dropdown-item>
+					<el-dropdown-item command="en" :disabled="state.disabledI18n === 'en'">English</el-dropdown-item>
+					<el-dropdown-item command="zh-tw" :disabled="state.disabledI18n === 'zh-tw'">繁體中文</el-dropdown-item>
+				</el-dropdown-menu>
+			</template>
+		</el-dropdown>
+		<div class="layout-navbars-breadcrumb-user-icon" @click="onSearchClick">
+			<el-icon :title="$t('message.user.title2')">
+				<ele-Search />
+			</el-icon>
+		</div>
+		<div class="layout-navbars-breadcrumb-user-icon" @click="onLayoutSetingClick">
+			<i class="icon-skin iconfont" :title="$t('message.user.title3')"></i>
+		</div>
+		<div class="layout-navbars-breadcrumb-user-icon">
+			<el-popover placement="bottom" trigger="hover" transition="el-zoom-in-top" :width="300" :persistent="false">
+				<template #reference>
+					<el-badge :is-dot="hasUnreadNotice">
+						<el-icon :title="$t('message.user.title4')">
+							<ele-Bell />
+						</el-icon>
+					</el-badge>
+				</template>
+				<UserNews :noticeList="state.noticeList" />
+			</el-popover>
+		</div>
+		<div class="layout-navbars-breadcrumb-user-icon" @click="onScreenfullClick">
+			<i class="iconfont" :title="state.isScreenfull ? $t('message.user.title6') : $t('message.user.title5')" :class="!state.isScreenfull ? 'icon-fullscreen' : 'icon-tuichuquanping'"></i>
+		</div>
+		<div class="layout-navbars-breadcrumb-user-icon mr10" @click="onOnlineUserClick">
+			<el-icon title="在线用户">
+				<ele-User />
+			</el-icon>
+		</div>
+		<el-dropdown :show-timeout="70" :hide-timeout="50" @command="onHandleCommandClick">
+			<span class="layout-navbars-breadcrumb-user-link">
+				<img :src="userInfos.avatar" class="layout-navbars-breadcrumb-user-link-photo mr5" />
+				{{ userInfos.realName == '' ? userInfos.account : userInfos.realName }}
+				<el-icon class="el-icon--right">
+					<ele-ArrowDown />
+				</el-icon>
+			</span>
+			<template #dropdown>
+				<el-dropdown-menu>
+					<!-- <el-dropdown-item command="/dashboard/home">{{ $t('message.user.dropdown1') }}</el-dropdown-item> -->
+					<el-dropdown-item command="/system/userCenter">{{ $t('message.user.dropdown2') }}</el-dropdown-item>
+					<el-dropdown-item divided command="logOut">{{ $t('message.user.dropdown5') }}</el-dropdown-item>
+				</el-dropdown-menu>
+			</template>
+		</el-dropdown>
+		<Search ref="searchRef" />
+		<OnlineUser ref="onlineUserRef" />
+	</div>
 </template>
 
 <script setup lang="ts" name="layoutBreadcrumbUser">
-import { defineAsyncComponent, ref, computed, reactive, onMounted, inject } from 'vue';
+import { defineAsyncComponent, ref, computed, reactive, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessageBox, ElMessage, ElNotification } from 'element-plus';
 import screenfull from 'screenfull';
@@ -95,8 +90,6 @@ import { clearAccessTokens, getAPI } from '/@/utils/axios-utils';
 import { SysAuthApi, SysNoticeApi } from '/@/api-services/api';
 
 import { signalR } from '/@/views/system/onlineUser/signalR';
-// 使用inject获取全局变量
-const globalData : any = inject('globalData');
 
 // 引入组件
 const UserNews = defineAsyncComponent(() => import('/@/layout/navBars/topBar/userNews.vue'));
@@ -248,10 +241,6 @@ const receiveNotice = (msg: any) => {
 		type: 'info',
 		position: 'bottom-right',
 	});
-};
-
-const showorhidebtn = () => {
-	globalData.showbtn = !globalData.showbtn;
 };
 </script>
 

@@ -53,7 +53,7 @@ public class SysMessageService : IDynamicApiController, ITransient
     [DisplayName("发送消息给除了发送人的其他人")]
     public async Task SendOtherUser(MessageInput input)
     {
-        var user = _sysCacheService.Get<SysOnlineUser>(CacheConst.KeyOnlineUser + input.UserId);
+        var user = _sysCacheService.Get<SysOnlineUser>(CacheConst.KeyUserOnline + input.UserId);
         if (user != null)
         {
             await _chatHubContext.Clients.AllExcept(user.ConnectionId).ReceiveMessage(input);
@@ -68,7 +68,7 @@ public class SysMessageService : IDynamicApiController, ITransient
     [DisplayName("发送消息给某个人")]
     public async Task SendUser(MessageInput input)
     {
-        var user = _sysCacheService.Get<SysOnlineUser>(CacheConst.KeyOnlineUser + input.UserId);
+        var user = _sysCacheService.Get<SysOnlineUser>(CacheConst.KeyUserOnline + input.UserId);
         if (user == null) return;
         await _chatHubContext.Clients.Client(user.ConnectionId).ReceiveMessage(input);
     }
@@ -84,7 +84,7 @@ public class SysMessageService : IDynamicApiController, ITransient
         var userlist = new List<string>();
         foreach (var userid in input.UserIds)
         {
-            var user = _sysCacheService.Get<SysOnlineUser>(CacheConst.KeyOnlineUser + userid);
+            var user = _sysCacheService.Get<SysOnlineUser>(CacheConst.KeyUserOnline + userid);
             if (user != null) userlist.Add(user.ConnectionId);
         }
         await _chatHubContext.Clients.Clients(userlist).ReceiveMessage(input);
@@ -94,10 +94,12 @@ public class SysMessageService : IDynamicApiController, ITransient
     /// 发送邮件
     /// </summary>
     /// <param name="message"></param>
+    /// <param name="title"></param>
+    /// <param name="isHtml"></param>
     /// <returns></returns>
     [DisplayName("发送邮件")]
-    public async Task SendEmail([Required] string message)
+    public async Task SendEmail([Required] string message, string title = "系统邮件", bool isHtml = false)
     {
-        await _fluentEmail.To(_emailOptions.DefaultToEmail).Body(message).SendAsync();
+        await _fluentEmail.To(_emailOptions.DefaultToEmail).Subject(title).Body(message, isHtml).SendAsync();
     }
 }

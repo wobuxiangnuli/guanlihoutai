@@ -13,7 +13,7 @@ namespace Admin.NET.Core;
 /// 系统角色菜单表
 /// </summary>
 [SugarTable(null, "系统角色菜单表")]
-[SystemTable]
+[SysTable]
 public class SysRoleMenu : EntityBaseId
 {
     /// <summary>
@@ -31,7 +31,6 @@ public class SysRoleMenu : EntityBaseId
     /// <summary>
     /// 菜单
     /// </summary>
-    [SugarColumn(IsIgnore = true)]
     [Navigate(NavigateType.OneToOne, nameof(MenuId))]
     public SysMenu SysMenu { get; set; }
 }

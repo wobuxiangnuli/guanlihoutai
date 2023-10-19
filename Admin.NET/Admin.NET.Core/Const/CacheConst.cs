@@ -17,60 +17,58 @@ public class CacheConst
     /// <summary>
     /// 用户缓存
     /// </summary>
-    public const string KeyUser = "user:";
+    public const string KeyUser = "sys_user:";
 
     /// <summary>
-    /// 菜单缓存
+    /// 用户菜单缓存
     /// </summary>
-    public const string KeyMenu = "menu:";
+    public const string KeyUserMenu = "sys_user_menu:";
 
     /// <summary>
-    /// 权限缓存（按钮集合）
+    /// 用户权限缓存（按钮集合）
     /// </summary>
-    public const string KeyPermission = "permission:";
+    public const string KeyUserButton = "sys_user_button:";
 
     /// <summary>
-    /// 机构Id集合缓存
+    /// 用户机构缓存
     /// </summary>
-    public const string KeyOrgIdList = "org:";
+    public const string KeyUserOrg = "sys_user_org:";
 
     /// <summary>
     /// 角色最大数据范围缓存
     /// </summary>
-    public const string KeyMaxDataScope = "maxDataScope:";
-
-    /// <summary>
-    /// 验证码缓存
-    /// </summary>
-    public const string KeyVerCode = "verCode:";
-
-    /// <summary>
-    /// 所有缓存关键字集合
-    /// </summary>
-    public const string KeyAll = "keys";
-
-    /// <summary>
-    /// 定时任务缓存
-    /// </summary>
-    public const string KeyTimer = "timer:";
+    public const string KeyRoleMaxDataScope = "sys_role_maxDataScope:";
 
     /// <summary>
     /// 在线用户缓存
     /// </summary>
-    public const string KeyOnlineUser = "onlineuser:";
+    public const string KeyUserOnline = "sys_user_online:";
 
     /// <summary>
-    /// 常量下拉框
+    /// 图形验证码缓存
     /// </summary>
-    public const string KeyConst = "const:";
+    public const string KeyVerCode = "sys_verCode:";
 
-    /// <summary>
-    /// swagger登录缓存
-    /// </summary>
-    public const string SwaggerLogin = "swaggerLogin:";
+    // 手机验证码缓存
+    public const string KeyPhoneVerCode = "sys_phoneVerCode:";
 
     /// <summary>
     /// 租户缓存
     /// </summary>
-    public const string KeyTenant = "tenant:list";
+    public const string KeyTenant = "sys_tenant";
+
+    /// <summary>
+    /// 常量下拉框
+    /// </summary>
+    public const string KeyConst = "sys_const:";
+
+    /// <summary>
+    /// 所有缓存关键字集合
+    /// </summary>
+    public const string KeyAll = "sys_keys";
+
+    /// <summary>
+    /// SqlSugar二级缓存
+    /// </summary>
+    public const string SqlSugar = "sys_sqlSugar:";
 }

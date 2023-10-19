@@ -317,6 +317,12 @@ public enum ErrorCodeEnum
     D4007,
 
     /// <summary>
+    /// 禁止本节点与父节点相同
+    /// </summary>
+    [ErrorCodeItemMetadata("禁止本节点与父节点相同")]
+    D4008,
+
+    /// <summary>
     /// 已存在同名或同编码应用
     /// </summary>
     [ErrorCodeItemMetadata("已存在同名或同编码应用")]
@@ -351,6 +357,18 @@ public enum ErrorCodeEnum
     /// </summary>
     [ErrorCodeItemMetadata("该职位下有用户禁止删除")]
     D6001,
+
+    /// <summary>
+    /// 无权修改本职位
+    /// </summary>
+    [ErrorCodeItemMetadata("无权修改本职位")]
+    D6002,
+
+    /// <summary>
+    /// 职位不存在
+    /// </summary>
+    [ErrorCodeItemMetadata("职位不存在")]
+    D6003,
 
     /// <summary>
     /// 通知公告状态错误
@@ -399,6 +417,12 @@ public enum ErrorCodeEnum
     /// </summary>
     [ErrorCodeItemMetadata("文件后缀错误")]
     D8003,
+
+    /// <summary>
+    /// 文件已存在
+    /// </summary>
+    [ErrorCodeItemMetadata("文件已存在")]
+    D8004,
 
     /// <summary>
     /// 已存在同名或同编码参数配置

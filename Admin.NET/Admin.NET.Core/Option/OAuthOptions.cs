@@ -15,7 +15,12 @@ namespace Admin.NET.Core;
 public sealed class OAuthOptions : IConfigurableOptions
 {
     /// <summary>
-    /// 微信配置
+    /// Weixin配置
     /// </summary>
     public Microsoft.AspNetCore.Authentication.OAuth.OAuthOptions Weixin { get; set; }
+
+    /// <summary>
+    /// Gitee配置
+    /// </summary>
+    public Microsoft.AspNetCore.Authentication.OAuth.OAuthOptions Gitee { get; set; }
 }

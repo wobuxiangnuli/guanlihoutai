@@ -10,57 +10,72 @@
 namespace Admin.NET.Core;
 
 /// <summary>
-/// SqlSugar仓储类
+/// SqlSugar 实体仓储
 /// </summary>
 /// <typeparam name="T"></typeparam>
 public class SqlSugarRepository<T> : SimpleClient<T> where T : class, new()
 {
-    protected ITenant iTenant = null; // 多租户事务
+    protected ITenant iTenant = null;
 
-    public SqlSugarRepository(ISqlSugarClient context = null) : base(context)
+    public SqlSugarRepository()
     {
         iTenant = App.GetRequiredService<ISqlSugarClient>().AsTenant();
+        base.Context = iTenant.GetConnectionScope(SqlSugarConst.MainConfigId);
 
-        // 若实体贴有多库特性，则返回指定的连接
+        // 若实体贴有多库特性，则返回指定库连接
         if (typeof(T).IsDefined(typeof(TenantAttribute), false))
         {
             base.Context = iTenant.GetConnectionScopeWithAttr<T>();
             return;
         }
 
-        // 若实体贴有系统表特性，则返回默认的连接
-        if (typeof(T).IsDefined(typeof(SystemTableAttribute), false))
+        // 若实体贴有日志表特性，则返回日志库连接
+        if (typeof(T).IsDefined(typeof(LogTableAttribute), false))
         {
-            base.Context = iTenant.GetConnectionScope(SqlSugarConst.ConfigId);
+            base.Context = iTenant.IsAnyConnection(SqlSugarConst.LogConfigId)
+                ? iTenant.GetConnectionScope(SqlSugarConst.LogConfigId)
+                : iTenant.GetConnectionScope(SqlSugarConst.MainConfigId);
             return;
         }
 
-        // 若当前未登录或是默认租户Id，则返回默认的连接
-        var tenantId = App.GetRequiredService<UserManager>().TenantId;
-        if (tenantId < 1 || tenantId.ToString() == SqlSugarConst.ConfigId) return;
+        // 若实体贴有系统表特性，则返回默认库连接
+        if (typeof(T).IsDefined(typeof(SysTableAttribute), false))
+        {
+            base.Context = iTenant.GetConnectionScope(SqlSugarConst.MainConfigId);
+            return;
+        }
 
-        var tenant = App.GetRequiredService<SysCacheService>().Get<List<SysTenant>>(CacheConst.KeyTenant).FirstOrDefault(u => u.Id == tenantId);
+        // 若未贴任何表特性或当前未登录或是默认租户Id，则返回默认库连接
+        var tenantId = App.User?.FindFirst(ClaimConst.TenantId)?.Value;
+        if (string.IsNullOrWhiteSpace(tenantId) || tenantId == SqlSugarConst.MainConfigId) return;
+
+        // 若租户为空或租户以Id隔离模式时，则返回默认库连接
+        var tenant = App.GetRequiredService<SysCacheService>().Get<List<SysTenant>>(CacheConst.KeyTenant).FirstOrDefault(u => u.Id == long.Parse(tenantId));
         if (tenant is null || tenant is { TenantType: TenantTypeEnum.Id }) return;
 
-        // 根据租户Id切库
-        if (!iTenant.IsAnyConnection(tenantId.ToString()))
+        // 若租户以库隔离模式时，根据租户Id切换库连接
+        if (!iTenant.IsAnyConnection(tenantId))
         {
-            // 获取主库连接配置
+            // 获取默认库连接配置
             var dbOptions = App.GetOptions<DbConnectionOptions>();
-            var mainConnConfig = dbOptions.ConnectionConfigs.First(u => u.ConfigId == SqlSugarConst.ConfigId);
+            var mainConnConfig = dbOptions.ConnectionConfigs.First(u => u.ConfigId == SqlSugarConst.MainConfigId);
 
-            // 连接配置
-            var connectionConfig = new DbConnectionConfig
+            // 设置租户库连接配置
+            var tenantConnConfig = new DbConnectionConfig
             {
                 ConfigId = tenant.Id,
                 DbType = tenant.DbType,
                 IsAutoCloseConnection = true,
-                ConnectionString = tenant.Connection
+                ConnectionString = tenant.Connection,
+                DbSettings = new DbSettings()
+                {
+                    EnableUnderLine = mainConnConfig.DbSettings.EnableUnderLine,
+                }
             };
-            iTenant.AddConnection(connectionConfig);
-            SqlSugarSetup.SetDbConfig(connectionConfig);
-            SqlSugarSetup.SetDbAop(iTenant.GetConnectionScope(tenantId.ToString()));
+            iTenant.AddConnection(tenantConnConfig);
+            SqlSugarSetup.SetDbConfig(tenantConnConfig);
+            SqlSugarSetup.SetDbAop(iTenant.GetConnectionScope(tenantId), dbOptions.EnableConsoleSql);
         }
-        base.Context = iTenant.GetConnectionScope(tenantId.ToString());
+        base.Context = iTenant.GetConnectionScope(tenantId);
     }
 }

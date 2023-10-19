@@ -18,6 +18,7 @@
 					<el-button icon="ele-Plus" @click="openAddTable"> 增加表 </el-button>
 					<el-button icon="ele-Plus" @click="openAddColumn"> 增加列 </el-button>
 					<el-button icon="ele-Plus" @click="openGenDialog"> 生成实体 </el-button>
+					<el-button icon="ele-Plus" @click="openGenSeedDataDialog"> 生成种子数据 </el-button>
 				</el-form-item>
 			</el-form>
 		</el-card>
@@ -62,7 +63,8 @@
 		<EditColumn ref="editColumnRef" @handleQueryColumn="handleQueryColumn" />
 		<AddTable ref="addTableRef" @addTableSubmitted="addTableSubmitted" />
 		<AddColumn ref="addColumnRef" @handleQueryColumn="handleQueryColumn" />
-		<GenEntity ref="genEntityRef" @handleQueryColumn="handleQueryColumn" />
+		<GenEntity ref="genEntityRef" @handleQueryColumn="handleQueryColumn" :application-namespaces="state.appNamespaces" />
+		<GenSeedData ref="genSeedDataRef" :application-namespaces="state.appNamespaces" />
 	</div>
 </template>
 
@@ -74,9 +76,10 @@ import EditColumn from '/@/views/system/database/component/editColumn.vue';
 import AddTable from '/@/views/system/database/component/addTable.vue';
 import AddColumn from '/@/views/system/database/component/addColumn.vue';
 import GenEntity from '/@/views/system/database/component/genEntity.vue';
+import GenSeedData from '/@/views/system/database/component/genSeedData.vue';
 
 import { getAPI } from '/@/utils/axios-utils';
-import { SysDatabaseApi } from '/@/api-services/api';
+import { SysDatabaseApi, SysCodeGenApi } from '/@/api-services/api';
 import { DbColumnOutput, DbTableInfo, DbColumnInput, DeleteDbTableInput, DeleteDbColumnInput } from '/@/api-services/models';
 
 const editTableRef = ref<InstanceType<typeof EditTable>>();
@@ -84,6 +87,7 @@ const editColumnRef = ref<InstanceType<typeof EditColumn>>();
 const addTableRef = ref<InstanceType<typeof AddTable>>();
 const addColumnRef = ref<InstanceType<typeof AddColumn>>();
 const genEntityRef = ref<InstanceType<typeof GenEntity>>();
+const genSeedDataRef = ref<InstanceType<typeof GenSeedData>>();
 const state = reactive({
 	loading: false,
 	loading1: false,
@@ -97,6 +101,7 @@ const state = reactive({
 		code: undefined,
 	},
 	editPosTitle: '',
+	appNamespaces: [] as Array<String>, // 存储位置
 });
 
 onMounted(async () => {
@@ -104,6 +109,9 @@ onMounted(async () => {
 	var res = await getAPI(SysDatabaseApi).apiSysDatabaseListGet();
 	state.dbData = res.data.result;
 	state.loading = false;
+
+	let appNamesRes = await getAPI(SysCodeGenApi).apiSysCodeGenApplicationNamespacesGet();
+	state.appNamespaces = appNamesRes.data.result as Array<string>;
 });
 
 // 增加表
@@ -159,6 +167,16 @@ const openGenDialog = () => {
 		tableName: state.tableName,
 	};
 	genEntityRef.value?.openDialog(table);
+};
+
+// 生成种子数据页面
+const openGenSeedDataDialog = () => {
+	if (state.configId == '' || state.tableName == '') return;
+	var table: any = {
+		configId: state.configId,
+		tableName: state.tableName,
+	};
+	genSeedDataRef.value?.openDialog(table);
 };
 
 // 打开表增加页面

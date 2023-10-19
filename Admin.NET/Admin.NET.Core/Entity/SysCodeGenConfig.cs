@@ -13,7 +13,7 @@ namespace Admin.NET.Core;
 /// 代码生成字段配置表
 /// </summary>
 [SugarTable(null, "代码生成字段配置表")]
-[SystemTable]
+[SysTable]
 public class SysCodeGenConfig : EntityBase
 {
     /// <summary>
@@ -28,6 +28,19 @@ public class SysCodeGenConfig : EntityBase
     [SugarColumn(ColumnDescription = "字段名称", Length = 128)]
     [Required, MaxLength(128)]
     public virtual string ColumnName { get; set; }
+
+    /// <summary>
+    /// 实体属性名
+    /// </summary>
+    [SugarColumn(ColumnDescription = "属性名称", Length = 128)]
+    [Required, MaxLength(128)]
+    public virtual string PropertyName { get; set; }
+
+    /// <summary>
+    /// 字段数据长度
+    /// </summary>
+    [SugarColumn(ColumnDescription = "字段数据长度", DefaultValue = "0")]
+    public int ColumnLength { get; set; }
 
     /// <summary>
     /// 字段描述
@@ -167,4 +180,10 @@ public class SysCodeGenConfig : EntityBase
     [SugarColumn(ColumnDescription = "父级字段", Length = 128)]
     [MaxLength(128)]
     public string? PidColumn { get; set; }
+
+    /// <summary>
+    /// 排序
+    /// </summary>
+    [SugarColumn(ColumnDescription = "排序")]
+    public int OrderNo { get; set; } = 100;
 }
