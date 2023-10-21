@@ -124,6 +124,10 @@ public class SysRegionService : IDynamicApiController, ITransient
     [DisplayName("同步行政区域")]
     public async Task Sync()
     {
+        GetAllRegion();
+    }
+    private async Task GetAllRegion()
+    {
         await _sysRegionRep.DeleteAsync(u => u.Id > 0);
 
         var context = BrowsingContext.New(Configuration.Default.WithDefaultLoader());
@@ -204,5 +208,36 @@ public class SysRegionService : IDynamicApiController, ITransient
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// 获取所有省的选择数据
+    /// </summary>
+    /// <returns></returns>
+    [DisplayName("获取所有省的选择数据")]
+    [AllowAnonymous]
+    public async Task<dynamic> GetProvince()
+    {
+        return await _sysRegionRep.AsQueryable().Where(u => u.Level == 1)
+            .Select(c => new
+            {
+                id = c.Id,
+                name = c.Name,
+            }).ToListAsync();
+    }
+    /// <summary>
+    /// 根据父级id获取下属行政区域
+    /// </summary>
+    /// <returns></returns>
+    [DisplayName("根据父级id获取下属行政区域")]
+    [AllowAnonymous]
+    public async Task<dynamic> GetChildRegionByPid(long pid)
+    {
+        return await _sysRegionRep.AsQueryable().Where(u => u.Pid == pid)
+            .Select(c => new
+            {
+                id = c.Id,
+                name = c.Name,
+            }).ToListAsync();
     }
 }
