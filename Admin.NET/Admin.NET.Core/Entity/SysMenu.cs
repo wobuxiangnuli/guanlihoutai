@@ -86,8 +86,7 @@ public class SysMenu : EntityBase
     /// <summary>
     /// 外链链接
     /// </summary>
-    [SugarColumn(ColumnDescription = "外链链接", Length = 256)]
-    [MaxLength(256)]
+    [SugarColumn(ColumnDescription = "外链链接")]
     public string? OutLink { get; set; }
 
     /// <summary>

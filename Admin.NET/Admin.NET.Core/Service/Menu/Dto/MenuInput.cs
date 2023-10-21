@@ -30,7 +30,49 @@ public class AddMenuInput : SysMenu
     [Required(ErrorMessage = "菜单名称不能为空")]
     public override string Title { get; set; }
 }
-
+/// <summary>
+/// 无代码方式增加菜单和更新菜单
+/// </summary>
+public class AddLowCodeMenuInput
+{
+    /// <summary>
+    /// 父Id
+    /// </summary>
+    [SugarColumn(ColumnDescription = "父Id")]
+    public long Pid { get; set; }
+    /// <summary>
+    /// 菜单类型
+    /// </summary>
+    [Required(ErrorMessage = "菜单类型不能为空")]
+    public MenuTypeEnum Type { get; set; }
+    /// <summary>
+    /// 名称
+    /// </summary>
+    [Required(ErrorMessage = "菜单名称不能为空")]
+    public string Title { get; set; }
+    /// <summary>
+    /// 图标
+    /// </summary>
+    [MaxLength(128, ErrorMessage = "图标长度不能超过128")]
+    public string? Icon { get; set; }
+    /// <summary>
+    /// 外部链接
+    /// </summary>
+    public string? OutLink { get; set; }
+    /// <summary>
+    /// 是否内嵌
+    /// </summary>
+    public bool IsIframe { get; set; }
+    /// <summary>
+    /// 备注
+    /// </summary>
+    [MaxLength(256, ErrorMessage = "备注长度不能超过256")]
+    public string? Remark { get; set; }
+}
+public class UpdateLowCodeMenuInput : AddLowCodeMenuInput
+{
+    public long Id { get; set; }
+}
 public class UpdateMenuInput : AddMenuInput
 {
 }

@@ -33,6 +33,7 @@ public class SysMenuService : IDynamicApiController, ITransient
         _sysUserRoleService = sysUserRoleService;
         _sysCacheService = sysCacheService;
     }
+    #region 框架原有方法
 
     /// <summary>
     /// 获取登录菜单树
@@ -101,6 +102,7 @@ public class SysMenuService : IDynamicApiController, ITransient
                 .OrderBy(u => u.OrderNo).ToTreeAsync(u => u.Children, u => u.Pid, 0, menuIdList.Select(d => (object)d).ToArray()); // 角色菜单授权时
     }
 
+
     /// <summary>
     /// 增加菜单
     /// </summary>
@@ -111,7 +113,7 @@ public class SysMenuService : IDynamicApiController, ITransient
     public async Task AddMenu(AddMenuInput input)
     {
         var isExist = input.Type != MenuTypeEnum.Btn
-            ? await _sysMenuRep.IsAnyAsync(u => u.Title == input.Title)
+            ? await _sysMenuRep.IsAnyAsync(u => u.Title == input.Title&& input.Pid == u.Pid&& input.Type == u.Type)
             : await _sysMenuRep.IsAnyAsync(u => u.Permission == input.Permission);
 
         if (isExist)
@@ -140,7 +142,7 @@ public class SysMenuService : IDynamicApiController, ITransient
             throw Oops.Oh(ErrorCodeEnum.D4008);
 
         var isExist = input.Type != MenuTypeEnum.Btn
-            ? await _sysMenuRep.IsAnyAsync(u => u.Title == input.Title && u.Type == input.Type && u.Id != input.Id)
+            ? await _sysMenuRep.IsAnyAsync(u => u.Title == input.Title && input.Pid == u.Pid && u.Type == input.Type && u.Id != input.Id)
             : await _sysMenuRep.IsAnyAsync(u => u.Permission == input.Permission && u.Type == input.Type && u.Id != input.Id);
         if (isExist)
             throw Oops.Oh(ErrorCodeEnum.D4000);
@@ -154,6 +156,7 @@ public class SysMenuService : IDynamicApiController, ITransient
         // 清除缓存
         DeleteMenuCache();
     }
+
 
     /// <summary>
     /// 删除菜单
@@ -265,9 +268,9 @@ public class SysMenuService : IDynamicApiController, ITransient
         var roleIdList = await _sysUserRoleService.GetUserRoleIdList(_userManager.UserId);
         return await _sysRoleMenuService.GetRoleMenuIdList(roleIdList);
     }
+    #endregion
 
     #region 额外增加的方法
-
     /// <summary>
     /// 获取单个菜单详情
     /// </summary>
@@ -276,6 +279,70 @@ public class SysMenuService : IDynamicApiController, ITransient
     public async Task<SysMenu> Get(long id)
     {
         return await _sysMenuRep.AsQueryable().FirstAsync(d => d.Id == id);
+    }
+    #endregion
+
+    #region 无代码方式创建菜单
+
+    /// <summary>
+    /// 增加菜单（）
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    [ApiDescriptionSettings(Name = "LowCodeAddMenu"), HttpPost]
+    [DisplayName("增加菜单")]
+    public async Task LowCodeAddMenu(AddLowCodeMenuInput input)
+    {
+        var isExist = await _sysMenuRep.IsAnyAsync(u => u.Title == input.Title && input.Pid == u.Pid);
+
+        if (isExist)
+            throw Oops.Oh(ErrorCodeEnum.D4000);
+
+        // 校验菜单参数
+        var sysMenu = input.Adapt<SysMenu>();
+        if (sysMenu.Type == MenuTypeEnum.普通列表 || sysMenu.Type == MenuTypeEnum.自定义页面)
+        {
+            sysMenu.Component = "/lowCode/DesignPage/index";
+            sysMenu.Path = "/lowCode/DesignPage";
+        }
+        else if (sysMenu.Type == MenuTypeEnum.外部页面)
+        {
+            sysMenu.Path = "layout/routerView/link";
+        }
+        CheckMenuParam(sysMenu);
+
+        await _sysMenuRep.InsertAsync(sysMenu);
+
+        // 清除缓存
+        DeleteMenuCache();
+    }
+
+    /// <summary>
+    /// 更新菜单
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    [ApiDescriptionSettings(Name = "LowCodeUpdateMenu"), HttpPost]
+    [DisplayName("更新菜单")]
+    public async Task LowCodeUpdateMenu(UpdateLowCodeMenuInput input)
+    {
+        if (input.Id == input.Pid)
+            throw Oops.Oh(ErrorCodeEnum.D4008);
+
+        var isExist = await _sysMenuRep.IsAnyAsync(u => u.Title == input.Title
+                                                       && input.Pid == u.Pid
+                                                       && u.Id != input.Id);
+        if (isExist)
+            throw Oops.Oh(ErrorCodeEnum.D4000);
+
+        // 校验菜单参数
+        var sysMenu = input.Adapt<SysMenu>();
+        CheckMenuParam(sysMenu);
+
+        await _sysMenuRep.AsUpdateable(sysMenu).ExecuteCommandAsync();
+
+        // 清除缓存
+        DeleteMenuCache();
     }
 
     #endregion

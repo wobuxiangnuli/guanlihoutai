@@ -16,20 +16,30 @@ namespace Admin.NET.Core;
 public enum MenuTypeEnum
 {
     /// <summary>
-    /// 目录
+    /// 目录(分组菜单,不允许有路由)
     /// </summary>
-    [Description("目录")]
+    [Description("目录或叫分组菜单")]
     Dir = 1,
-
     /// <summary>
-    /// 菜单
+    /// 菜单()
     /// </summary>
-    [Description("菜单")]
+    [Description("菜单(开发用的写代码)")]
     Menu = 2,
-
     /// <summary>
     /// 按钮
     /// </summary>
-    [Description("按钮")]
-    Btn = 3
+    [Description("按钮(开发用的写代码)")]
+    Btn = 3,
+    /// <summary>
+    /// 其实就是一个增删改查组件
+    /// </summary>
+    普通列表 = 4,
+    /// <summary>
+    /// 建立一个空页面，然后自己去选择显示的组件
+    /// </summary>
+    自定义页面 = 5,
+    /// <summary>
+    /// 就是一个外部地址页面，可以选择嵌入或者不嵌入
+    /// </summary>
+    外部页面 = 6
 }
