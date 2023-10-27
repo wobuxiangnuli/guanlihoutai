@@ -1,5 +1,10 @@
 <template>
 	<div class="layout-navbars-breadcrumb-user pr15" :style="{ flex: layoutUserFlexNum }">
+		<div class="layout-navbars-breadcrumb-user-icon" title="开启或关闭创建自定义菜单" @click="showorhidebtn">
+			<el-icon>
+				<ele-Hide />
+			</el-icon>
+		</div>
 		<el-dropdown :show-timeout="70" :hide-timeout="50" trigger="click" @command="onComponentSizeChange">
 			<div class="layout-navbars-breadcrumb-user-icon">
 				<i class="iconfont icon-ziti" :title="$t('message.user.title0')"></i>
@@ -74,7 +79,7 @@
 </template>
 
 <script setup lang="ts" name="layoutBreadcrumbUser">
-import { defineAsyncComponent, ref, computed, reactive, onMounted, onUnmounted } from 'vue';
+import { defineAsyncComponent, ref, computed, reactive, onMounted, inject, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessageBox, ElMessage, ElNotification } from 'element-plus';
 import screenfull from 'screenfull';
@@ -90,6 +95,8 @@ import { clearAccessTokens, getAPI } from '/@/utils/axios-utils';
 import { SysAuthApi, SysNoticeApi } from '/@/api-services/api';
 
 import { signalR } from '/@/views/system/onlineUser/signalR';
+// 使用inject获取全局变量
+const globalData: any = inject('globalData');
 
 // 引入组件
 const UserNews = defineAsyncComponent(() => import('/@/layout/navBars/topBar/userNews.vue'));
@@ -241,6 +248,10 @@ const receiveNotice = (msg: any) => {
 		type: 'info',
 		position: 'bottom-right',
 	});
+};
+
+const showorhidebtn = () => {
+	globalData.showbtn = !globalData.showbtn;
 };
 </script>
 

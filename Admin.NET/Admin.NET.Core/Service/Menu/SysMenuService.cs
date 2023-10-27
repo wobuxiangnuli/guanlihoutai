@@ -110,10 +110,10 @@ public class SysMenuService : IDynamicApiController, ITransient
     /// <returns></returns>
     [ApiDescriptionSettings(Name = "Add"), HttpPost]
     [DisplayName("增加菜单")]
-    public async Task AddMenu(AddMenuInput input)
+    public async Task<long> AddMenu(AddMenuInput input)
     {
         var isExist = input.Type != MenuTypeEnum.Btn
-            ? await _sysMenuRep.IsAnyAsync(u => u.Title == input.Title&& input.Pid == u.Pid&& input.Type == u.Type)
+            ? await _sysMenuRep.IsAnyAsync(u => u.Title == input.Title&& input.Pid == u.Pid)
             : await _sysMenuRep.IsAnyAsync(u => u.Permission == input.Permission);
 
         if (isExist)
@@ -127,6 +127,7 @@ public class SysMenuService : IDynamicApiController, ITransient
 
         // 清除缓存
         DeleteMenuCache();
+        return sysMenu.Id;
     }
 
     /// <summary>
@@ -142,7 +143,7 @@ public class SysMenuService : IDynamicApiController, ITransient
             throw Oops.Oh(ErrorCodeEnum.D4008);
 
         var isExist = input.Type != MenuTypeEnum.Btn
-            ? await _sysMenuRep.IsAnyAsync(u => u.Title == input.Title && input.Pid == u.Pid && u.Type == input.Type && u.Id != input.Id)
+            ? await _sysMenuRep.IsAnyAsync(u => u.Title == input.Title && input.Pid == u.Pid && u.Id != input.Id)
             : await _sysMenuRep.IsAnyAsync(u => u.Permission == input.Permission && u.Type == input.Type && u.Id != input.Id);
         if (isExist)
             throw Oops.Oh(ErrorCodeEnum.D4000);
@@ -291,7 +292,7 @@ public class SysMenuService : IDynamicApiController, ITransient
     /// <returns></returns>
     [ApiDescriptionSettings(Name = "LowCodeAddMenu"), HttpPost]
     [DisplayName("增加菜单")]
-    public async Task LowCodeAddMenu(AddLowCodeMenuInput input)
+    public async Task<long> LowCodeAddMenu(AddLowCodeMenuInput input)
     {
         var isExist = await _sysMenuRep.IsAnyAsync(u => u.Title == input.Title && input.Pid == u.Pid);
 
@@ -312,9 +313,9 @@ public class SysMenuService : IDynamicApiController, ITransient
         CheckMenuParam(sysMenu);
 
         await _sysMenuRep.InsertAsync(sysMenu);
-
         // 清除缓存
         DeleteMenuCache();
+        return sysMenu.Id;
     }
 
     /// <summary>
