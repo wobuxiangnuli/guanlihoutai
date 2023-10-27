@@ -35,28 +35,53 @@ public class FormDataService : IDynamicApiController
     }
     [ApiDescriptionSettings(Name = "Add")]
     [DisplayName("添加FormData表")]
-    public async Task Add(FormDataAddInput input)
+    public async Task<long> Add(FormDataAddInput input)
     {
-        var model = await _repository.AsQueryable().OrderByDescending(c=>c.Version).FirstAsync(c=>c.Id== input.Id);
+        var model = await _repository.AsQueryable().Where(c=>c.FormCode==input.FormCode&&c.IsDelete==false)
+            .OrderBy(c=>c.Version).Select(c=>new { c.TableName,c.Version}).FirstAsync();
         db.Aop.OnLogExecuting = (sql, pars) =>
         {
             Console.WriteLine(sql); // 打印 SQL 语句
         };
         var data = new FormDataTableInfo
         {
-            Data = input.Data,
+            Data =JsonConvert.SerializeObject(input.Data) ,
             CreateTime = DateTime.Now,
             CreateUserId =1,
             Version = model.Version
         };
-        await db.Insertable(data).AS(model.TableName).ExecuteCommandAsync();
+        string sql = @$"INSERT INTO {model.TableName} (Data, CreateTime, CreateUserId, Version)
+                    VALUES (@Data::jsonb, @CreateTime, @CreateUserId, @Version)
+                    RETURNING id;";
+        var userId = App.User?.FindFirstValue("Id");
+        var parameters = new SugarParameter[]
+        {
+            new SugarParameter("@Data", JsonConvert.SerializeObject(input.Data)),
+            new SugarParameter("@CreateTime", DateTime.Now),
+            new SugarParameter("@CreateUserId", 1),
+            new SugarParameter("@Version", model.Version)
+        };
+        // 执行SQL语句并获取返回的id
+        return await db.Ado.GetLongAsync(sql, parameters);
     }
     [ApiDescriptionSettings(Name = "Update")]
     [DisplayName("更新FormData表")]
-    public async Task Update(UiFormUpdateInput input)
+    public async Task Update(FormDataUpdateInput input)
     {
-        var model = await _repository.GetFirstAsync(c => c.Id == input.Id);
-        await _repository.AsUpdateable(model).ExecuteCommandAsync();
+        var tableName =  _repository.AsQueryable().Where(c => c.FormCode == input.FormCode && c.IsDelete == false)
+            .OrderBy(c => c.Version).Select(c => c.TableName).ToString();
+        string sql = @$"update  {tableName} set (Data, UpdateTime, UpdateUserid)
+                    VALUES (@Data::jsonb, @UpdateTime, @UpdateUserid)
+                    where id=@id;";
+        var parameters = new SugarParameter[]
+        {
+            new SugarParameter("@Data", JsonConvert.SerializeObject(input.Data)),
+            new SugarParameter("@UpdateTime", DateTime.Now),
+            new SugarParameter("@UpdateUserid", 1),
+            new SugarParameter("@id", input.Id)
+        };
+        // 执行SQL语句并获取返回的id
+         await db.Ado.ExecuteCommandAsync(sql, parameters);
     }
 
     [DisplayName("分页获取FormData表")]

@@ -20,7 +20,7 @@ public class UiFormAddInput
 /// </summary>
 public class UiFormUpdateInput
 {
-    public  long Id { get; set; }
+    public long FormCode { get; set; }
 
     [Required(ErrorMessage = "名称不能为空")]
     [MaxLength(200, ErrorMessage = "名称长度不能超过200个字符")]

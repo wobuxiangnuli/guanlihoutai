@@ -17,7 +17,8 @@ namespace FastAdmin.Plugin.DataSet.Service.UiRender.Dto;
 public class FormDataTableInfo
 {
     public decimal Version { get; set; }
-    public object Data { get; set; }
+
+    public string Data { get; set; }
 
     public DateTime CreateTime { get; set; }
 
@@ -33,7 +34,15 @@ public class FormDataTableInfo
 public class FormDataAddInput
 {
     [Required]
-    public long Id { get; set; }
+    public long FormCode { get; set; }
     [Required]
     public object Data { get; set; }
+}
+public class FormDataUpdateInput: FormDataAddInput
+{
+    /// <summary>
+    /// 当前数据的id
+    /// </summary>
+    [Required]
+    public long Id { get; set; }
 }

@@ -24,6 +24,12 @@ public class UiForm : EntityBase
     /// </summary>
     public int Version { get; set; } = 1;
     /// <summary>
+    /// 没个表单从建立起就有一个form code 不会改变
+    /// </summary>
+    [DefaultValue(0)]
+    [SugarColumn(ColumnDescription = "表单的唯一id")]
+    public long FormCode { get; set; }
+    /// <summary>
     /// form名字
     /// </summary>
     [Required(ErrorMessage = "名称不能为空")]

@@ -6,6 +6,8 @@ using Mapster;
 using System.Security.Claims;
 using FastAdmin.Plugin.DataSet.Service.UiRender.Dto;
 using static SKIT.FlurlHttpClient.Wechat.Api.Models.CgibinUserInfoBatchGetRequest.Types;
+using System;
+using RazorEngine.Compilation.ImpromptuInterface.Optimization;
 
 namespace FastAdmin.Plugin.DataSet.Service.SqlQuery;
 
@@ -39,13 +41,14 @@ public class UiFormService : IDynamicApiController
     {
         await db.Ado.BeginTranAsync();
         var model = input.Adapt<Entity.UiForm>();
+        model.FormCode = GenerateRandomFormCode();
         var tableName = GenerateRandomTableName();
         model.TableName = tableName;
         await _repository.AsInsertable(model).ExecuteCommandAsync();
         //db.DbMaintenance.CreateTable(tableName, GetColumnInfos());
         await db.Ado.ExecuteCommandAsync(GetColumnInfos(tableName));
         await db.Ado.CommitTranAsync();
-        return model.Id;//返回查询结果
+        return model.FormCode;//返回查询结果
     }
 
     private string GetColumnInfos(string tableName)
@@ -78,8 +81,19 @@ public class UiFormService : IDynamicApiController
     [DisplayName("更新UiForm")]
     public async Task Update(UiFormUpdateInput input)
     {
-        var model = await _repository.GetFirstAsync(c => c.Id == input.Id);
-        await _repository.AsUpdateable(model).ExecuteCommandAsync();
+        //todo 比较表结构是否有变化
+        var oldVersion =await _repository.AsQueryable().Where(c => c.FormCode == input.FormCode).OrderByDescending(c => c.Version)
+             .FirstAsync();
+        var uiForm = new UiForm
+        {
+            FormCode = input.FormCode,
+            Name = input.Name,
+            Description = input.Description,
+            FormJson = input.FormJson,
+            TableName = oldVersion.TableName,
+            Version = oldVersion.Version+1,
+        };
+        await _repository.AsInsertable(uiForm).ExecuteCommandAsync();
     }
 
     [DisplayName("分页获取UiForm")]
@@ -112,5 +126,15 @@ public class UiFormService : IDynamicApiController
     {
         int tableCount = db.Ado.GetInt("SELECT count(*) FROM pg_tables WHERE schemaname = 'public';");
         return "Table_" + tableCount + "_" + Guid.NewGuid().ToString("N").Substring(0, 8);
+    }
+
+    [DisplayName("动态form code")]
+    private long GenerateRandomFormCode()
+    {
+        //todo 可能重复
+        DateTime now = DateTime.Now;
+        // 获取当前的年月日时分秒毫秒作为前缀
+        string prefix = $"{now:yyyyMMddHHmmssfff}" + new Random().Next(0, 99);
+        return Convert.ToInt64(prefix);
     }
 }
