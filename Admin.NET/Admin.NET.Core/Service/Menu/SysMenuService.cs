@@ -115,7 +115,8 @@ public class SysMenuService : IDynamicApiController, ITransient
         var isExist = input.Type != MenuTypeEnum.Btn
             ? await _sysMenuRep.IsAnyAsync(u => u.Title == input.Title&& input.Pid == u.Pid)
             : await _sysMenuRep.IsAnyAsync(u => u.Permission == input.Permission);
-
+        if (input.Type==MenuTypeEnum.自定义页面||input.Type==MenuTypeEnum.普通列表)
+            throw Oops.Oh(ErrorCodeEnum.F1000);
         if (isExist)
             throw Oops.Oh(ErrorCodeEnum.D4000);
 
@@ -126,7 +127,7 @@ public class SysMenuService : IDynamicApiController, ITransient
         await _sysMenuRep.InsertAsync(sysMenu);
 
         // 清除缓存
-        DeleteMenuCache();
+        _sysCacheService.DeleteMenuCache();
         return sysMenu.Id;
     }
 
@@ -155,7 +156,7 @@ public class SysMenuService : IDynamicApiController, ITransient
         await _sysMenuRep.AsUpdateable(sysMenu).ExecuteCommandAsync();
 
         // 清除缓存
-        DeleteMenuCache();
+        _sysCacheService.DeleteMenuCache();
     }
 
 
@@ -178,7 +179,7 @@ public class SysMenuService : IDynamicApiController, ITransient
         await _sysRoleMenuService.DeleteRoleMenuByMenuIdList(menuIdList);
 
         // 清除缓存
-        DeleteMenuCache();
+        _sysCacheService.DeleteMenuCache();
     }
 
     /// <summary>
@@ -252,15 +253,6 @@ public class SysMenuService : IDynamicApiController, ITransient
     }
 
     /// <summary>
-    /// 清除菜单和按钮缓存
-    /// </summary>
-    private void DeleteMenuCache()
-    {
-        _sysCacheService.RemoveByPrefixKey(CacheConst.KeyUserMenu);
-        _sysCacheService.RemoveByPrefixKey(CacheConst.KeyUserButton);
-    }
-
-    /// <summary>
     /// 获取当前用户菜单Id集合
     /// </summary>
     /// <returns></returns>
@@ -314,7 +306,7 @@ public class SysMenuService : IDynamicApiController, ITransient
 
         await _sysMenuRep.InsertAsync(sysMenu);
         // 清除缓存
-        DeleteMenuCache();
+        _sysCacheService.DeleteMenuCache();
         return sysMenu.Id;
     }
 
@@ -343,7 +335,7 @@ public class SysMenuService : IDynamicApiController, ITransient
         await _sysMenuRep.AsUpdateable(sysMenu).ExecuteCommandAsync();
 
         // 清除缓存
-        DeleteMenuCache();
+        _sysCacheService.DeleteMenuCache();
     }
 
     #endregion

@@ -16,5 +16,9 @@ public enum WidgetType
     /// <summary>
     /// 带搜索的普通列表
     /// </summary>
-    SearchList = 0
+    SearchList = 0,
+    /// <summary>
+    /// 头顶带有tab的列表
+    /// </summary>
+    TabSearchList=1
 }
