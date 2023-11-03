@@ -633,4 +633,10 @@ public enum ErrorCodeEnum
     /// </summary>
     [ErrorCodeItemMetadata("租户已禁用")]
     Z1003,
+
+    /// <summary>
+    /// 非法调用
+    /// </summary>
+    [ErrorCodeItemMetadata("非法调用")]
+    F1000,
 }

@@ -27,6 +27,9 @@ public class PageContent : EntityBaseData
     /// </summary>
     public long? MenuId { get; set; }
 
+    [Navigate(NavigateType.OneToOne, nameof(MenuId))]
+    public SysMenu SysMenu { get; set; }
+
     [Navigate(typeof(PageContentWidgetObject), nameof(PageContentWidgetObject.PageContentId), nameof(PageContentWidgetObject.WidgetObjectId))]//注意顺序
     public List<WidgetObject> WidgetObjects { get; set; }
 

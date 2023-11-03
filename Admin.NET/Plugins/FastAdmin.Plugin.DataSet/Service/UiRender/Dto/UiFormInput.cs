@@ -1,10 +1,13 @@
-﻿namespace FastAdmin.Plugin.DataSet.Service.SqlQuery.Dto;
+﻿using FastAdmin.Plugin.DataSet.Service.PageContents.Dto;
+
+namespace FastAdmin.Plugin.DataSet.Service.UiRender.Dto;
 
 /// <summary>
-/// DataSet添加
+/// UiForm添加
 /// </summary>
-public class UiFormAddInput
+public class UiFormAddInput: AddPageInput
 {
+    public string Id { get; set; }
     [Required(ErrorMessage = "名称不能为空")]
     [MaxLength(200, ErrorMessage = "名称长度不能超过200个字符")]
     public string Name { get; set; }
@@ -16,7 +19,7 @@ public class UiFormAddInput
     public string FormJson { get; set; }
 }
 /// <summary>
-/// DataSet更新
+/// UiForm更新
 /// </summary>
 public class UiFormUpdateInput
 {

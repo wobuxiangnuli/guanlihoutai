@@ -17,7 +17,7 @@ namespace FastAdmin.Plugin.DataSet.Entity;
 /// DataSet 数据表
 /// </summary>
 [SugarTable(null, "Widget 前端组件")]
-public class Widget : EntityBaseData
+public class Widget : EntityBase
 {
     [SugarColumn(ColumnDescription = "Widget 名称", Length = 100)]
     [Required, MaxLength(100)]

@@ -19,7 +19,7 @@ namespace FastAdmin.Plugin.DataSet.Entity;
 [SugarTable(null, "Widget 具体对象")]
 public class WidgetObject : EntityBaseData
 {
-    [SugarColumn(ColumnDescription = "WidgetObject 名称 唯一", Length = 100)]
+    [SugarColumn(ColumnDescription = "WidgetObject 名称", Length = 100)]
     [Required, MaxLength(100)]
     public string Name { get; set; }
 
@@ -47,4 +47,8 @@ public class WidgetObject : EntityBaseData
     /// </summary>
     [SugarColumn(IsJson = true, ColumnDescription = "widget显示设定,可能包含数据源、排序等,根据类型存放不同数据")]
     public string Settings { get; set; }
+    /// <summary>
+    /// 目前只有 TabSearchList控件才有 form_code
+    /// </summary>
+    public long? FormCode { get; set; }
 }

@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FastAdmin.Plugin.DataSet.Enum;
+using FastAdmin.Plugin.DataSet.Service.UiRender.Dto;
 
 namespace FastAdmin.Plugin.DataSet.Entity;
 /// <summary>
@@ -42,6 +43,10 @@ public class UiForm : EntityBase
     [SugarColumn(IsJson = true, ColumnDescription = "存放form的json配置")]
     [Required]
     public string FormJson { get; set; }
+
+    [SugarColumn(IsJson = true, ColumnDescription = "存放form的数据库结构")]
+    [Required]
+    public List<ColumnJson> ColumnJson { get; set; }
     /// <summary>
     /// 当前表单存放数据的表名
     /// </summary>

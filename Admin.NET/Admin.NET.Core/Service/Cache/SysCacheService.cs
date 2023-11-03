@@ -151,4 +151,13 @@ public class SysCacheService : IDynamicApiController, ISingleton
     {
         return _cache.GetOrAdd($"{_cacheOptions.Prefix}{key}", callback, expire);
     }
+    /// <summary>
+    /// 清除菜单和按钮缓存
+    /// </summary>
+    [NonAction]
+    public void DeleteMenuCache()
+    {
+        RemoveByPrefixKey(CacheConst.KeyUserMenu);
+        RemoveByPrefixKey(CacheConst.KeyUserButton);
+    }
 }
