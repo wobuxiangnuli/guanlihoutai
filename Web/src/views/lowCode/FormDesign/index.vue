@@ -32,12 +32,15 @@
 
 <script setup lang="ts">
 
-import { ref , shallowRef } from 'vue';
+import { ref , shallowRef,getCurrentInstance } from 'vue';
 import rules from './component/rules.vue'
 import editfield from './component/editfield.vue'
 import SaveDialog from './component/components/SaveDialog.vue';
 import PublicPublish from './component/publicpublish.vue'
 import { useRouter,} from 'vue-router'
+import {useFormMessage} from '../../../stores/formMessage'
+const { proxy }: any = getCurrentInstance();
+const formMessage = useFormMessage();
 const components = [
   {label:'编辑字段', name: 'EditField', component: editfield },
   {label:'表单设置', name: 'FormSettings', component: rules },
@@ -50,6 +53,23 @@ const savedialog = ref()
 
 
 const goBack = () => {
+	let data:any = []
+	console.log(formMessage.$state.pageMessage);
+	console.log((JSON.parse(localStorage.fmjson)));
+	(JSON.parse(localStorage.fmjson)).list.map((item:any)=>{
+		data.push({
+			...formMessage.$state.pageMessage,
+			formJson:JSON.stringify(item),
+			name:"sadsa",
+			description: "string",
+			id:"132"
+		})
+	})
+proxy.$post('api/DataSet/uiForm/add',{...data}).then((res:any)=>{
+	console.log(res);
+	
+})
+	
 	savedialog.value.open()
 }
 const handleaction = (val:any )=>{
@@ -63,6 +83,7 @@ const handleClick = (tab: any) => {
 			DyComponents.value = item.component
 		}
 	})	
+	
 };
 </script>
 

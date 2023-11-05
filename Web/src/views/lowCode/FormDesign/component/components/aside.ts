@@ -123,7 +123,7 @@ export class typeConfigList {
             case 'input':
                 return {
                     part: '',
-                    compare: 'EQUAL',
+                    compare: '等于',
                     isEmpty: false,
                     type: 'input',
                     lianjieci: '且',
@@ -134,7 +134,7 @@ export class typeConfigList {
                 };
             case 'email':
                 return {
-                    compare: 'EQUAL',
+                    compare: '等于',
                     isEmpty: false,
                     type: 'email',
                     lianjieci: '且',
@@ -167,7 +167,7 @@ export class typeConfigList {
                 };
             case 'phone':
                 return {
-                    compare: 'EQUAL',
+                    compare: '等于',
                     isEmpty: false,
                     type: 'phone',
                     lianjieci: '且',
@@ -178,7 +178,7 @@ export class typeConfigList {
                 };
             case 'time':
                 return {
-                    compare: 'EQUAL',
+                    compare: '等于',
                     isEmpty: false,
                     type: 'time',
                     lianjieci: '且',

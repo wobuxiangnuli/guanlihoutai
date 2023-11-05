@@ -1,13 +1,14 @@
 <template>
     <fm-making-form 
       ref="makingform" 
-      style="height: 94vh;" 
+      style="height: 90vh;" 
       :cache=true
       clearable
       upload
       preview 
       generate-code 
       generate-json
+      
     >
     </fm-making-form>
   </template>

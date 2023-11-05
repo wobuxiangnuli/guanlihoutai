@@ -12,27 +12,24 @@
 				<div class="rulesdiv" v-for="(item, index) in state" :key="index">
 					<el-button class="delete" @click="Delete(index)" link>×</el-button>
 					<el-row>
-						<el-col :span="3"
-							><span v-if="index == 0">当</span>
+						<el-col :span="3"><span v-if="index == 0">当</span>
 							<el-select class="wubiankuang" style="width: 80%" v-else v-model="item.lianjieci">
-								<el-option v-for="(val, key) in lianjiecilist" :key="key" :label="val" :value="key">{{ val }} </el-option></el-select
-							></el-col
-						>
+								<el-option v-for="(val, key) in lianjiecilist" :key="key" :label="val" :value="key">{{ val
+								}} </el-option></el-select></el-col>
 						<el-col :span="20">
 							<div class="biaoti1">
 								{{ item.name }}
 								<el-select v-model="item.compare" class="wubiankuang" style="width: 23%">
-									<el-option v-for="el in item.options" :key="el.value" :label="el.label" :value="el.value"></el-option>
+									<el-option v-for="el in item.options" :key="el.value" :label="el.label"
+										:value="el.label"></el-option>
 								</el-select>
 							</div>
 							<div>
 								<el-select
 									:disabled="item.compare == 'IS_NULL' || item.compare == 'NOT_NULL' || item.compare == 'IN_RANGE' || item.compare == 'NOT_IN_RANGE' || item.type == 'area'"
-									class="select"
-									v-model="item.isDynamic"
-									style="width: 17%"
-								>
-									<el-option v-for="(item, key) in shifoudongtai" :key="key" :label="item" :value="key">{{ item }}</el-option>
+									class="select" v-model="item.isDynamic" style="width: 17%">
+									<el-option v-for="(item, key) in shifoudongtai" :key="key" :label="item" :value="key">{{
+										item }}</el-option>
 								</el-select>
 
 								<el-radio-group v-if="item.type == 's'" v-model="item.isEmpty">
@@ -40,73 +37,55 @@
 									<el-radio :label="true" size="large">无</el-radio>
 								</el-radio-group>
 								<!-- 文本框 -->
-								<el-input
-									v-model="item.value"
+								<el-input v-model="item.value"
 									:disabled="item.compare == 'IS_NULL' || item.compare == 'NOT_NULL'"
 									v-if="item.type == 'input' || item.type == 'email' || item.type == 'phone'"
-									style="width: 80%"
-									placeholder="请输入"
-								></el-input>
+									style="width: 80%" placeholder="请输入"></el-input>
 								<!-- 数值框 -->
-								<el-input-number
-									v-model="item.value"
+								<el-input-number v-model="item.value"
 									:disabled="item.compare == 'IS_NULL' || item.compare == 'NOT_NULL'"
 									v-if="(item.type == 'valnum' || item.type == 'amount') && item.compare != 'IN_RANGE' && item.compare != 'NOT_IN_RANGE'"
-									:controls="false"
-									style="width: 80%"
-									placeholder="请输入数值"
-								></el-input-number>
+									:controls="false" style="width: 80%" placeholder="请输入数值"></el-input-number>
 								<!-- 范围选择 -->
 								<el-input-number
 									v-if="item.type == 'valnum' || (item.type == 'amount' && (item.compare == 'NOT_IN_RANGE' || item.compare == 'IN_RANGE'))"
-									style="width: 35%"
-									placeholder="最小值"
-									:controls="false"
-								></el-input-number>
-								<span v-if="item.type == 'valnum' || (item.type == 'amount' && (item.compare == 'NOT_IN_RANGE' || item.compare == 'IN_RANGE'))" class="jiange">——</span>
+									style="width: 35%" placeholder="最小值" :controls="false"></el-input-number>
+								<span
+									v-if="item.type == 'valnum' || (item.type == 'amount' && (item.compare == 'NOT_IN_RANGE' || item.compare == 'IN_RANGE'))"
+									class="jiange">——</span>
 								<el-input-number
 									v-if="item.type == 'valnum' || (item.type == 'amount' && (item.compare == 'NOT_IN_RANGE' || item.compare == 'IN_RANGE'))"
-									style="width: 35%"
-									placeholder="最大值"
-									:controls="false"
-								></el-input-number>
+									style="width: 35%" placeholder="最大值" :controls="false"></el-input-number>
 								<!-- 日期下拉框 -->
-								<el-select
-									:disabled="item.compare == 'IS_NULL' || item.compare == 'NOT_NULL'"
+								<el-select :disabled="item.compare == 'IS_NULL' || item.compare == 'NOT_NULL'"
 									v-model="item.value"
 									v-if="item.type == 'data' && item.compare != 'NOT_IN_RANGE' && item.compare != 'IN_RANGE'"
-									style="width: 80%"
-								>
-									<el-option v-for="(el, index) in item.datalist" :key="index" :label="el.label" :value="el.value"></el-option>
+									style="width: 80%">
+									<el-option v-for="(el, index) in item.datalist" :key="index" :label="el.label"
+										:value="el.value"></el-option>
 								</el-select>
 								<el-input-number
 									v-if="item.type == 'data' && (item.value == 'PAST_DAYS' || item.value == 'FUTURE_DAYS')"
 									:controls="false"
-									style="width: 30%; margin-left: 95px; margin-top: 5px; margin-right: 5px"
-								></el-input-number>
-								<el-checkbox v-if="item.type == 'data' && (item.value == 'PAST_DAYS' || item.value == 'FUTURE_DAYS')" label="是否包含今天" size="large" />
-								<el-date-picker v-if="item.type == 'data' && item.value == 'SPECIFIC_DATE'" v-model="item.value1" type="date" placeholder="请选择" style="width: 100%; margin-top: 5px" />
+									style="width: 30%; margin-left: 95px; margin-top: 5px; margin-right: 5px"></el-input-number>
+								<el-checkbox
+									v-if="item.type == 'data' && (item.value == 'PAST_DAYS' || item.value == 'FUTURE_DAYS')"
+									label="是否包含今天" size="large" />
+								<el-date-picker v-if="item.type == 'data' && item.value == 'SPECIFIC_DATE'"
+									v-model="item.value1" type="date" placeholder="请选择"
+									style="width: 100%; margin-top: 5px" />
 								<el-date-picker
 									v-if="item.type == 'data' && (item.compare == 'NOT_IN_RANGE' || item.compare == 'IN_RANGE')"
-									v-model="item.value"
-									type="daterange"
-									range-separator="To"
-									start-placeholder="Start date"
-									end-placeholder="End date"
-								/>
+									v-model="item.value" type="daterange" range-separator="To"
+									start-placeholder="Start date" end-placeholder="End date" />
 								<!-- 时间框 -->
-								<el-time-picker v-if="item.type == 'time'" :disabled="item.compare == 'IS_NULL' || item.compare == 'NOT_NULL'" v-model="item.time" style="width: 80%" format="HH:mm" />
+								<el-time-picker v-if="item.type == 'time'"
+									:disabled="item.compare == 'IS_NULL' || item.compare == 'NOT_NULL'" v-model="item.time"
+									style="width: 80%" format="HH:mm" />
 								<!-- 地区下拉框 -->
-								<el-cascader
-									v-model="item.value"
-									:options="areaOptions"
-									:props="props"
-									:disabled="item.compare == 'IS_NULL' || item.compare == 'NOT_NULL'"
-									change-on-select
-									v-if="item.type == 'area'"
-									placeholder="请选择地址"
-									style="width: 80%"
-								>
+								<el-cascader v-model="item.value" :options="areaOptions" :props="props"
+									:disabled="item.compare == 'IS_NULL' || item.compare == 'NOT_NULL'" change-on-select
+									v-if="item.type == 'area'" placeholder="请选择地址" style="width: 80%">
 								</el-cascader>
 
 								<el-checkbox-group v-if="item.type == 's'" style="width: 80%; display: inline-block">
@@ -130,26 +109,29 @@
 					</span>
 					<template #dropdown>
 						<el-dropdown-menu>
-							<el-dropdown-item v-for="item in formDesignerMockData" :key="item.value" :command="item.type">{{ item.label }}</el-dropdown-item>
+							<el-dropdown-item v-for="item in formDesignerMockData" :key="item.value" :command="item.type">{{
+								item.label }}</el-dropdown-item>
 						</el-dropdown-menu>
 					</template>
 				</el-dropdown>
 				<div class="biaoti">则执行动作</div>
-					<div class="rulesdiv" v-for="(val,index) in action" :key="val.actions">
+				<div class="rulesdiv" v-for="(val, index) in action" :key="val.actions">
 					<el-button class="delete" @click="Delete(index)" link>×</el-button>
 					<el-row>
 						<el-col :span="6">
 							<el-select class="select" v-model="val.actions">
-								<el-option v-for="(item, key) in FieldStatus" :key="key" :command="item">{{ item }}</el-option>
+								<el-option v-for="(item, key) in FieldStatus" :key="key" :command="item">{{ item
+								}}</el-option>
 							</el-select>
 						</el-col>
 						<el-col :span="18">
-							<el-select class="select" v-model="val.actions" style="width: 80%;">
-								<el-option v-for="(item, key) in FieldStatus" :key="key" :command="item">{{ item }}</el-option>
+							<el-select class="select" v-model="val.executor" style="width: 80%;">
+								<el-option v-for="(item, key) in FieldStatus" :key="key" :command="item">{{ item
+								}}</el-option>
 							</el-select>
 						</el-col>
 					</el-row>
-				
+
 				</div>
 				<el-dropdown @command="actioned" trigger="click">
 					<span class="el-dropdown-link">
@@ -157,18 +139,26 @@
 					</span>
 					<template #dropdown>
 						<el-dropdown-menu>
-							<el-dropdown-item v-for="(item, key) in FieldStatus" :key="key" :command="item">{{ item }}</el-dropdown-item>
+							<el-dropdown-item v-for="(item, key) in FieldStatus" :key="key" :command="item">{{ item
+							}}</el-dropdown-item>
 						</el-dropdown-menu>
 					</template>
 				</el-dropdown>
 			</div>
+			<el-button @click="close">取 消</el-button>
+			<el-button type="primary" @click="setRules">确 定</el-button>
 		</el-drawer>
+
 	</div>
 </template>
 <script setup lang="ts">
 import { ref, reactive, getCurrentInstance } from 'vue';
+
 import { ElMessageBox } from 'element-plus';
 import { lianjiecilist, shifoudongtai, typeConfigList, FieldStatus } from './aside';
+import { useFormMessage } from '/@/stores/formMessage'
+import { done } from 'nprogress';
+const formMessage = useFormMessage();
 const { proxy }: any = getCurrentInstance();
 const direction = ref('rtl');
 const drawer = ref(false);
@@ -176,6 +166,13 @@ const drawer = ref(false);
 const state = reactive<Rules[]>([]);
 const action = reactive<actionList[]>([]);
 const areaOptions = ref<any[]>([]);
+const setRules = () => {
+	let arr: any = []
+	arr.push({ rule: state, action: action, id: Date.parse(new Date().toString()) });
+	formMessage.setRules(arr)
+	console.log(formMessage)
+	close()
+}
 const props = {
 	lazy: true,
 	lazyLoad(node: any, resolve: Function) {
@@ -209,7 +206,7 @@ const props = {
 
 const Delete = (index: number) => {
 	state.splice(index, 1);
-	action.splice(index,1);
+	action.splice(index, 1);
 };
 const formDesignerMockData = [
 	{
@@ -260,6 +257,9 @@ const formDesignerMockData = [
 const open = () => {
 	drawer.value = true;
 };
+const close = () =>{
+	drawer.value = false;
+}
 const handleClose = (done: () => void) => {
 	ElMessageBox.confirm('Are you sure you want to close this?')
 		.then(() => {
@@ -287,9 +287,11 @@ defineExpose({
 	--el-select-border-color-hover: #ffffff !important;
 	--el-select-input-focus-border-color: #ffffff !important;
 }
-.rulesdiv{
+
+.rulesdiv {
 	position: relative;
 }
+
 .delete {
 	position: absolute;
 	top: 5px;
@@ -298,12 +300,15 @@ defineExpose({
 	color: rgb(190, 190, 190);
 	z-index: 2002;
 }
+
 .jiange {
 	margin: 0 5px 0 5px;
 }
+
 .biaoti1 {
 	margin-bottom: 10px;
 }
+
 .select {
 	margin-right: 10px;
 	margin-bottom: 5px;
@@ -315,16 +320,19 @@ defineExpose({
 		font-size: 18px;
 		font-weight: 700;
 	}
+
 	.biaoti {
 		font-size: 14px;
 		font-weight: 700;
 		margin-bottom: 5px;
 		margin-top: 20px;
 	}
+
 	.content {
 		padding-top: 50px;
 		padding-left: 40px;
 	}
+
 	.mid-input {
 		width: 30%;
 	}
