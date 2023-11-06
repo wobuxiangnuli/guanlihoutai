@@ -65,7 +65,7 @@
 <script lang="ts" setup name="workspaceEdit">
 import { reactive, ref } from 'vue';
 
-import { getAPI } from '@/utils/axios-utils';
+import { getAPI } from '/@/utils/axios-utils';
 import { SysConfigApi } from '/@/api-services/api';
 import { UpdateConfigInput } from '/@/api-services/models';
 
