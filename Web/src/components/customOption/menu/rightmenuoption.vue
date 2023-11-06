@@ -49,7 +49,7 @@ const handleCommand = (command: string) => {
 		case 'edit':
 			proxy.$get(`/api/sysMenu/${props.menus.id}`).then((res: any) => {
 				if (res.data.result) {
-					// console.log(res.data.result);
+					console.log(res.data.result);
 					state.editMenuTitle = '编辑菜单';
 					editMenuRef.value?.openDialog(res.data.result);
 				}

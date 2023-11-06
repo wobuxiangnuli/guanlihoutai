@@ -57,3 +57,16 @@ declare type LinkViewState = {
 	title: string;
 	isLink: string;
 };
+// aside dialog
+declare type DialogState<> = {
+	isShowSearch: boolean;
+	pageMessage:{
+		pid: string,
+		type: number,
+		title: string,
+		icon: string,
+		outLink: string,
+		isIframe: true,
+		remark: string
+	};
+};

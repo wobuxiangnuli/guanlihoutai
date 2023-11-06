@@ -351,3 +351,25 @@ interface HttpJobMessage {
 	httpMethod?: string | null;
 	body?: string | null;
 }
+//rules
+type selectOptions = {
+		label: string;
+		value:string;
+};
+declare type Rules = {
+	compare:string
+	options?:selectOptions[]
+	datalist?:selectOptions[]
+	isEmpty:boolean
+	type:string
+	isDynamic:string
+	value:string
+	value1?:string
+	lianjieci:string
+	time?:string
+	name:string
+}
+declare type actionList = {
+	actions:string
+	executor:string[]
+}

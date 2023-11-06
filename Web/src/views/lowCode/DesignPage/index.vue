@@ -24,7 +24,7 @@ import TableSetting from './components/tableSetting.vue';
 
 // 定义变量内容
 const state = reactive({
-	layouts: [{ x: 0, y: 0, w: 8, h: 12, i: '0', isDraggable: true, isResizable: true }],
+	layouts: [{ x: 0, y: 0, w: 8, h: 12, i: '0', isDraggable: true, isResizable: true },{}],
 	isTable: false as boolean,
 });
 const addWidgetRef = ref<InstanceType<typeof AddWidget>>();

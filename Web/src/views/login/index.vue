@@ -117,6 +117,7 @@ onMounted(() => {
 			img {
 				width: 100px;
 				height: 64px;
+				
 			}
 			.login-left-logo-text {
 				display: flex;

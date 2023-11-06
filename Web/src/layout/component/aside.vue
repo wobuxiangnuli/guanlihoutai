@@ -2,6 +2,8 @@
 	<div class="h100" v-show="!isTagsViewCurrenFull">
 		<el-aside class="layout-aside" :class="setCollapseStyle">
 			<Logo v-if="setShowLogo" />
+			<el-button class="dialogbutton" text @click="onSearchClick">新建</el-button>
+			<Dialog ref="dialog"></Dialog> 
 			<el-scrollbar class="flex-auto" ref="layoutAsideScrollbarRef" @mouseenter="onAsideEnterLeave(true)" @mouseleave="onAsideEnterLeave(false)">
 				<Vertical :menuList="state.menuList" />
 			</el-scrollbar>
@@ -20,10 +22,12 @@ import mittBus from '/@/utils/mitt';
 // 引入组件
 const Logo = defineAsyncComponent(() => import('/@/layout/logo/index.vue'));
 const Vertical = defineAsyncComponent(() => import('/@/layout/navMenu/vertical.vue'));
+const Dialog = defineAsyncComponent(() => import('./diglog.vue'));
 
 // 定义变量内容
 const layoutAsideScrollbarRef = ref();
 const stores = useRoutesList();
+const dialog = ref();
 const storesThemeConfig = useThemeConfig();
 const storesTagsViewRoutes = useTagsViewRoutes();
 const { routesList } = storeToRefs(stores);
@@ -36,6 +40,7 @@ const state = reactive<AsideState>({
 
 // 设置菜单展开/收起时的宽度
 const setCollapseStyle = computed(() => {
+
 	const { layout, isCollapse, menuBar } = themeConfig.value;
 	const asideBrTheme = ['#FFFFFF', '#FFF', '#fff', '#ffffff'];
 	const asideBrColor = asideBrTheme.includes(menuBar) ? 'layout-el-aside-br-color' : '';
@@ -66,6 +71,9 @@ const setCollapseStyle = computed(() => {
 		}
 	}
 });
+const onSearchClick = () => {
+	dialog.value.openDialog()
+};
 // 设置显示/隐藏 logo
 const setShowLogo = computed(() => {
 	let { layout, isShowLogo } = themeConfig.value;
@@ -156,3 +164,9 @@ watch(
 	}
 );
 </script>
+<style lang="scss" scoped>
+.h100{
+	z-index: 2002;
+}
+</style>
+

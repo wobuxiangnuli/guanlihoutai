@@ -3,6 +3,7 @@
 		<el-scrollbar ref="layoutMainScrollbarRef" class="layout-main-scroll layout-backtop-header-fixed" wrap-class="layout-main-scroll" view-class="layout-main-scroll">
 			<LayoutParentView />
 			<LayoutFooter v-if="isFooter" />
+			<el-dialog :v-model=true title="Tips" width="30%"></el-dialog>
 		</el-scrollbar>
 		<el-backtop :target="setBacktopClass" />
 	</el-main>

@@ -26,6 +26,7 @@
 		"echarts-gl": "^2.0.9",
 		"echarts-wordcloud": "^2.1.0",
 		"element-plus": "^2.4.0",
+		"formMaking-el": "git+https://e.coding.net/wensi/vueform/vueForm.git#dev",
 		"js-cookie": "^3.0.5",
 		"js-table2excel": "^1.1.2",
 		"jsplumb": "^2.15.6",

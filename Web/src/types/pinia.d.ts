@@ -92,3 +92,13 @@ declare interface ThemeConfigState {
 		globalComponentSize: string;
 	};
 }
+//页面配置
+declare interface pageMessage{
+	pid: string,
+	type: number,
+	title: string,
+	icon: string,
+	outLink: string,
+	isIframe: true,
+	remark: string
+}
